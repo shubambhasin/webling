@@ -89,9 +89,8 @@ payment and sign-in hosts. Pets connect only while the tab is visible.
 
 `site/` is the landing page at <https://webling.vercel.app>. `npm run build:site` assembles it into
 `public/`: the page, the extension's scripts (so the page runs the real extension on itself), the
-extension zip and a generated `og.png`. Vercel runs the same build (see `vercel.json`); connect this
-repo under the project's **Settings → Git** to deploy every push to `main`. To preview the build
-locally:
+extension zip and a generated `og.png`. Vercel runs the same build (see `vercel.json`) on every push:
+`main` deploys to production, other branches get preview URLs. To preview the build locally:
 
 ```bash
 npm run build:site && node scripts/dev-server.mjs public
