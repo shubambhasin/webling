@@ -1,4 +1,5 @@
 // The landing page, built and served like production, driven in headless Chrome.
+// WEBLING_URL=https://webling.vercel.app runs the same checks against a deployed site instead.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -15,9 +16,13 @@ const stats = (page) => page.eval(`chrome.runtime.sendMessage({ type: 'state' })
 
 before(async () => {
   if (skip) return;
-  execFileSync('node', ['scripts/build-site.mjs'], { cwd: root, stdio: 'ignore' });
-  server = await serve(`${root}public`);
-  base = `http://127.0.0.1:${server.port}`;
+  if (process.env.WEBLING_URL) {
+    base = process.env.WEBLING_URL.replace(/\/$/, '');
+  } else {
+    execFileSync('node', ['scripts/build-site.mjs'], { cwd: root, stdio: 'ignore' });
+    server = await serve(`${root}public`);
+    base = `http://127.0.0.1:${server.port}`;
+  }
   chrome = await launch();
 });
 
