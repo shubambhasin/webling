@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Eater fixture</title>
+  <style>
+    body { font: 18px/1.6 Georgia, serif; margin: 0; }
+    article { max-width: 640px; margin: 80px auto; padding: 0 20px 400px; }
+    .site-nav { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #eee; display: flex; gap: 16px; align-items: center; padding: 0 16px; z-index: 50; }
+    .sidebar { position: fixed; left: 0; top: 60px; width: 22vw; bottom: 0; background: #f6f6f6; padding: 12px; z-index: 40; }
+    .banner { position: fixed; left: 0; right: 0; bottom: 0; background: #2e3a4d; color: #fff; padding: 18px 24px; z-index: 2147483645; font: 15px system-ui, sans-serif; }
+    .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9998; }
+    .modal { position: fixed; z-index: 9999; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 440px; background: #ffe9d6; padding: 28px; font: 16px system-ui, sans-serif; text-align: center; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav"><a href="#">Home</a><a href="#">Blog</a><a href="#">Subscribe</a></nav>
+  <aside class="sidebar"><b>Newsletter</b><p>Subscribe for updates every week, never miss a post.</p></aside>
+  <article>
+    <h1>A page for testing what a webling eats</h1>
+    <p>Lines of text for the pet to stand on. Octopuses have three hearts. A group of flamingos is a flamboyance.</p>
+    <p>Honey found in ancient tombs is still edible. Bananas are berries; strawberries are not.</p>
+    <p>Wombats make cube-shaped droppings. Sea otters hold hands while they sleep.</p>
+  </article>
+
+  <script>
+    // Helpers the tests call through Runtime.evaluate.
+    let n = 0;
+    window.fx = {
+      banner(text = 'We use cookies to improve your experience. Read our cookie policy.') {
+        const b = document.createElement('div');
+        b.className = 'banner';
+        b.id = 'cookie-banner-' + ++n;
+        b.innerHTML = `<p>${text}</p><button>Accept all</button><button>Reject</button>`;
+        document.body.appendChild(b);
+        return b.id;
+      },
+      modal({ backdrop = true, lock = true } = {}) {
+        const id = 'modal-' + ++n;
+        if (backdrop) {
+          const bd = document.createElement('div');
+          bd.className = 'backdrop';
+          bd.id = id + '-backdrop';
+          document.body.appendChild(bd);
+        }
+        const m = document.createElement('div');
+        m.className = 'modal';
+        m.id = id;
+        m.setAttribute('role', 'dialog');
+        m.innerHTML = '<h3>Don\'t miss a thing!</h3><p>Subscribe to our newsletter and get 10% off.</p><input placeholder="email"> <button>Join</button>';
+        document.body.appendChild(m);
+        if (lock) document.body.style.overflow = 'hidden';
+        return id;
+      },
+      gone: (id) => { const e = document.getElementById(id); return !!e && e.style.display === 'none'; },
+      shown: (id) => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none'; },
+      stats: () => chrome.runtime.sendMessage({ type: 'state' }).then((s) => s.pet.stats),
+      // Keeps changing a class on some element, like ads, carousels and tickers do.
+      churn(ms = 150) {
+        const el = document.querySelector('article h1');
+        return setInterval(() => el.classList.toggle('tick'), ms);
+      },
+      toast: () => document.querySelector('webling-root').shadowRoot.querySelector('.toast'),
+    };
+  </script>
+  <script src="/dev/chrome-shim.js"></script>
+  <script src="/extension/shared/config.js"></script>
+  <script src="/extension/shared/sprite.js"></script>
+  <script src="/extension/shared/pet.js"></script>
+  <script src="/extension/background.js"></script>
+  <script>
+    window.ready = (async () => {
+      await devInstall();
+      const s = await chrome.runtime.sendMessage({ type: 'state' });
+      if (!s.pet.hatched) await chrome.runtime.sendMessage({ type: 'hatch', name: 'Testy', presence: false });
+      const manifest = await (await fetch('/extension/manifest.json')).json();
+      for (const f of manifest.content_scripts[0].js) {
+        if (f.startsWith('shared/')) continue;
+        await new Promise((ok, fail) => {
+          const el = document.createElement('script');
+          el.src = '/extension/' + f;
+          el.onload = ok;
+          el.onerror = fail;
+          document.body.appendChild(el);
+        });
+      }
+      return true;
+    })();
+  </script>
+</body>
+</html>

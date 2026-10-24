@@ -60,7 +60,10 @@
       + '<button class="yes">Accept all</button><button>Reject</button>';
     b.querySelectorAll('button').forEach((x) => (x.onclick = () => b.remove()));
     document.body.appendChild(b);
-    requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('in')));
+    // Reading layout commits the off-screen start position, so the slide-in plays without waiting
+    // for an animation frame (those can stall in background or throttled tabs).
+    b.getBoundingClientRect();
+    b.classList.add('in');
   }
 
   function addPopup() {

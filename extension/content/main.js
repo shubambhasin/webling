@@ -4,7 +4,8 @@
   if (window.top !== window || WL.booted) return;
   WL.booted = true;
 
-  WL.input = { lastMove: performance.now(), lastInteract: 0 };
+  // lastInteract starts at -Infinity ("never"); 0 would read as a click when the page loaded.
+  WL.input = { lastMove: performance.now(), lastInteract: -Infinity };
   const moved = () => (WL.input.lastMove = performance.now());
   addEventListener('pointermove', moved, { passive: true, capture: true });
   addEventListener('scroll', moved, { passive: true, capture: true });

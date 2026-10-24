@@ -261,6 +261,13 @@
     // ---- grab, throw and poke ----
     bindPointer() {
       let down = null, samples = [];
+      // Forget a press in progress (the pet is about to be busy, so it mustn't become a drag).
+      this.cancelPress = () => {
+        if (!down) return;
+        if (this.hit.hasPointerCapture(down.id)) this.hit.releasePointerCapture(down.id);
+        down = null;
+        this.hit.classList.remove('held');
+      };
       this.hit.addEventListener('pointerenter', () => {
         if (this.ghost && !this.bubble.classList.contains('on')) this.say(this.look.name || 'a webling', 1200);
       });
@@ -269,11 +276,11 @@
         e.preventDefault();
         e.stopPropagation();
         this.hit.setPointerCapture(e.pointerId);
-        down = { x: e.clientX, y: e.clientY, t: performance.now() };
+        down = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
         samples = [];
       });
       this.hit.addEventListener('pointermove', (e) => {
-        if (!down) return;
+        if (!down || this.busy) return;
         if (this.mode !== 'held' && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) {
           this.mode = 'held';
           this.on = null;

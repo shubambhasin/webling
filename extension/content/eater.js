@@ -16,19 +16,28 @@
     '[aria-label*="cookie" i]', '[aria-label*="newsletter" i]', '[role="dialog"]', '[aria-modal="true"]',
   ].join(',');
   const USER_OPENED_MS = 3000; // a modal that shows up this soon after a click was probably asked for
+  const SCAN_AFTER_CHANGE_MS = 700; // at most one rescan this long after the page changes
+  const SAFETY_SCAN_MS = 3000; // and a rescan this often regardless, for anything the observer missed
+  const MEAL_TIMEOUT_MS = 15000; // a meal that hasn't finished by now is abandoned so eating can't jam
 
-  const seen = new WeakSet(), userOpened = new WeakSet();
-  let enabled = false, busy = false, observer = null, scanTimer = null;
+  // eaten: started eating (never again, even if spat out). queued: waiting for its turn; dropped
+  // again if it can't be eaten when the turn comes, so a later scan can pick it back up.
+  const eaten = new WeakSet(), queued = new WeakSet(), userOpened = new WeakSet();
+  let enabled = false, busy = false, observer = null, scanTimer = null, safetyTimer = null;
   const queue = [];
 
   const eater = (WL.eater = {
     start() {
       if (enabled) return;
       enabled = true;
-      for (const ms of [800, 2200, 4500]) setTimeout(eater.scan, ms);
+      for (const ms of [800, 2200]) setTimeout(eater.scan, ms);
+      safetyTimer = setInterval(() => document.hidden || eater.scan(), SAFETY_SCAN_MS);
+      // Throttled, not debounced: a page that never stops changing must still get rescanned.
       observer = new MutationObserver(() => {
-        clearTimeout(scanTimer);
-        scanTimer = setTimeout(eater.scan, 900);
+        scanTimer ||= setTimeout(() => {
+          scanTimer = null;
+          eater.scan();
+        }, SCAN_AFTER_CHANGE_MS);
       });
       observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'open'] });
     },
@@ -36,7 +45,10 @@
     stop() {
       enabled = false;
       observer?.disconnect();
-      queue.length = 0;
+      clearInterval(safetyTimer);
+      clearTimeout(scanTimer);
+      scanTimer = null;
+      for (const job of queue.splice(0)) queued.delete(job.el);
     },
 
     scan() {
@@ -55,11 +67,11 @@
       }
       const recent = performance.now() - WL.input.lastInteract < USER_OPENED_MS;
       for (const el of roots) {
-        if (seen.has(el) || userOpened.has(el)) continue;
+        if (eaten.has(el) || queued.has(el) || userOpened.has(el)) continue;
         const kind = classify(el);
         if (!kind) continue;
         if (kind === 'popup' && recent) { userOpened.add(el); continue; }
-        seen.add(el);
+        queued.add(el);
         queue.push({ el, kind });
       }
       next();
@@ -107,19 +119,43 @@
     if (busy || !enabled || !WL.me) return;
     const job = queue.shift();
     if (!job) return;
+    queued.delete(job.el);
     if (!job.el.isConnected || !classify(job.el)) return next();
     busy = true;
+    eaten.add(job.el);
+    const meal = { aborted: false };
+    const watchdog = visibleTimeout(MEAL_TIMEOUT_MS);
     try {
-      await eat(job.el, job.kind);
+      await Promise.race([eat(job.el, job.kind, meal), watchdog.promise]);
+    } catch {
+      // Whatever stalled it, stop the meal where it is and get the pet back to normal.
+      meal.aborted = true;
+      WL.me.release();
     } finally {
+      watchdog.cancel();
       busy = false;
       setTimeout(next, 700);
     }
   }
 
-  async function eat(el, kind) {
+  // Rejects after ms of time with the tab visible (hidden tabs pause animation, which isn't a stall).
+  function visibleTimeout(ms) {
+    let timer;
+    const promise = new Promise((_, fail) => {
+      let left = ms;
+      timer = setInterval(() => {
+        if (!document.hidden && (left -= 250) <= 0) fail(new Error('meal timed out'));
+      }, 250);
+    });
+    promise.catch(() => {});
+    return { promise, cancel: () => clearInterval(timer) };
+  }
+
+  async function eat(el, kind, meal) {
     const pet = WL.me;
     while (pet.mode === 'held') await wait(200);
+    if (meal.aborted) return;
+    pet.cancelPress(); // a press that started before the leap must not turn into a drag mid-meal
     const r = el.getBoundingClientRect();
     const fromLeft = pet.sx < r.left + r.width / 2;
     const y = Math.max(r.top, pet.h + 6);
@@ -127,17 +163,20 @@
     const x1 = fromLeft ? Math.min(r.right, innerWidth - pet.w / 2) : Math.max(r.left, pet.w / 2);
     pet.say(kind === 'cookie' ? 'ooh, a cookie' : 'ooh, snack', 1400);
     await pet.tweenTo(x0, y);
+    if (meal.aborted) return;
     pet.dir = fromLeft ? 1 : -1;
 
     const saved = saveStyles(el, ['clip-path', 'display']);
     const color = colorOf(el);
     const secs = Math.max(1.2, Math.min(2.6, r.width / 450));
     await animate(secs, (k) => {
+      if (meal.aborted) return false;
       const cut = k * r.width;
       el.style.setProperty('clip-path', bite(r.width, r.height, cut, fromLeft), 'important');
       pet.x = x0 + (x1 - x0) * k;
       if (Math.random() < 0.6) WL.fx.crumbs(pet.x + pet.dir * pet.w * 0.35, y - pet.h * 0.45, color, 1);
     });
+    if (meal.aborted) return restoreStyles(saved); // don't leave it half-eaten
     el.style.setProperty('display', 'none', 'important');
 
     // Backdrops and scroll locks that came with a pop-up.
@@ -216,13 +255,13 @@
   }
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  // Calls fn(k) each frame with k going 0 → 1 over secs; fn returning false stops early.
   const animate = (secs, fn) => new Promise((done) => {
     const t0 = performance.now();
     const step = (now) => {
       const k = Math.min(1, (now - t0) / (secs * 1000));
-      fn(k);
-      if (k < 1) requestAnimationFrame(step);
-      else done();
+      if (fn(k) === false || k >= 1) return done();
+      requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   });

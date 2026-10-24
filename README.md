@@ -36,9 +36,19 @@ in one page with a `chrome.*` stand-in (`dev/chrome-shim.js`), on a test article
 and a newsletter pop-up. Open it in two tabs to see presence. `/dev/popup.html` is the popup.
 Add `?timers` to drive animation from timers (for automated checks in background tabs).
 
+## Tests
+
 ```bash
 npm test
 ```
+
+- `npm run test:unit`: the art, life rules, background state handling and presence server (seconds).
+- `npm run test:e2e`: real headless Chrome, driven over the DevTools protocol with no dependencies
+  (`test/browser.mjs`). `eater.e2e` covers what gets eaten and what doesn't, undo, per-site off, and
+  regressions: pages that never stop changing, banners arriving mid-meal or hidden when their turn
+  comes, dragging the pet mid-leap, and stalled meals. `site.e2e` builds the landing page and clicks
+  through it like a visitor, including "Another cookie banner" while animation frames are throttled.
+  Uses your installed Chrome; set `CHROME_PATH` for another one. Skipped when none is found.
 
 ## What's where
 
