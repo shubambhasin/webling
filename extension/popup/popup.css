@@ -92,6 +92,7 @@ input[type=text] {
 }
 .check { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 14px; cursor: pointer; }
 .check input { margin: 2px 0 0; accent-color: var(--accent); }
+.check[hidden] { display: none; }
 .hatch .primary { width: 100%; padding: 10px; font-size: 14px; }
 
 .name-row { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; }

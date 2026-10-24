@@ -42,7 +42,7 @@
           <input type="text" id="name" maxlength="16" placeholder="${esc(suggestion)}" aria-label="Name">
           <button id="dice" title="Pick a random name" aria-label="Random name">?!</button>
         </div>
-        <label class="check">
+        <label class="check" ${WL.config.presenceUrl ? '' : 'hidden'}>
           <input type="checkbox" id="presence" checked>
           <span>Meet other weblings on the same page
             <small>Only a scrambled page ID is shared, never the address. Always off on mail, banking and sign-in pages.</small></span>
@@ -98,7 +98,7 @@
         <label class="check"><input type="checkbox" id="eat" ${state.settings.eat ? 'checked' : ''}><span>Eat cookie banners and pop-ups</span></label>
         ${host ? `<label class="check"><input type="checkbox" id="eat-here" ${state.settings.noEat.includes(host) ? '' : 'checked'} ${state.settings.eat ? '' : 'disabled'}>
           <span>…on ${esc(host)}</span></label>` : ''}
-        <label class="check"><input type="checkbox" id="presence" ${state.settings.presence ? 'checked' : ''}>
+        <label class="check" ${WL.config.presenceUrl ? '' : 'hidden'}><input type="checkbox" id="presence" ${state.settings.presence ? 'checked' : ''}>
           <span>Meet other weblings<small>Shares a scrambled page ID, your pet's name and colour. Never the address.</small></span></label>
       </div>
       <p class="week">This week: ${n(w.cookies, 'cookie banner')}, ${n(w.popups, 'pop-up')}, ${n(w.sites, 'new site')}, ${n(w.boops, 'boop')}.</p>`;

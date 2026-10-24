@@ -15,7 +15,7 @@
 
   const presence = (WL.presence = {
     allowedHere() {
-      if (!crypto?.subtle || chrome.extension?.inIncognitoContext) return false;
+      if (!WL.config.presenceUrl || !crypto?.subtle || chrome.extension?.inIncognitoContext) return false;
       if (DENY.test(location.hostname)) return false;
       return !document.querySelector('input[type=password]');
     },
