@@ -6,7 +6,16 @@ meets the weblings of other people reading the same page.
 
 Chrome extension (Manifest V3, no build step) plus a small WebSocket presence server.
 
+**Live demo: <https://webling.vercel.app>.** A webling hatches on the page and eats its cookie banner.
+
 ## Try it
+
+Download the extension from the site (or use this repo's `extension/` folder), then in Chrome:
+`chrome://extensions` → Developer mode → **Load unpacked** → pick the folder. The welcome tab opens;
+name your egg and hatch it. Open any article.
+
+Meeting other weblings needs the presence server. Run it locally and point `presenceUrl` in
+`extension/shared/config.js` at `ws://localhost:8787`:
 
 ```bash
 cd server && npm install && cd ..
@@ -15,9 +24,6 @@ cd server && npm install && cd ..
 ```bash
 npm run server
 ```
-
-Then in Chrome: `chrome://extensions` → Developer mode → **Load unpacked** → pick `extension/`.
-The welcome tab opens; name your egg and hatch it. Open any article.
 
 ## Develop without reloading the extension
 
@@ -69,11 +75,22 @@ pets aren't position-synced: each visitor's pet is simulated locally on your cop
 Presence is skipped in incognito, on pages with a password field, and on mail, docs, banking,
 payment and sign-in hosts. Pets connect only while the tab is visible.
 
-## Before publishing
+## The site
 
-- Deploy `server/` (any Node host: Fly, Render, Railway) behind TLS and set `presenceUrl` in
-  `extension/shared/config.js` to the `wss://` address. Set `shareUrl` to the landing page.
-- `npm run zip` writes `dist/webling-<version>.zip` and warns if presence still points at localhost.
+`site/` is the landing page at <https://webling.vercel.app>. `npm run build:site` assembles it into
+`public/`: the page, the extension's scripts (so the page runs the real extension on itself), the
+extension zip and a generated `og.png`. Vercel runs the same build on every push to `main`
+(see `vercel.json`). To preview the build locally:
+
+```bash
+npm run build:site && node scripts/dev-server.mjs public
+```
+
+## Before publishing to the Chrome Web Store
+
+- Deploy `server/` to a host with WebSockets (Fly, Render, Railway; not Vercel) behind TLS and set
+  `presenceUrl` in `extension/shared/config.js` to the `wss://` address. Until then presence is off.
+- `npm run zip` writes `dist/webling-<version>.zip` and notes when presence is off.
 - Chrome Web Store: the listing needs a privacy section. It's honest and short: no browsing history
   leaves the device. Visited hostnames are stored locally for the "sites explored" count only.
 
