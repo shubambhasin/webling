@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webling dev harness</title>
+  <style>
+    body { font: 18px/1.6 Georgia, serif; color: #222; background: #fbfaf7; margin: 0; }
+    article { max-width: 680px; margin: 0 auto; padding: 48px 20px 200px; }
+    h1 { font-size: 46px; line-height: 1.1; margin: 0 0 16px; }
+    h2 { margin-top: 48px; }
+    .card { border: 1px solid #ddd; padding: 16px 20px; background: #fff; border-radius: 8px; }
+    .dev { position: absolute; top: 8px; right: 8px; font: 12px ui-monospace, monospace; display: flex; gap: 6px; }
+    .dev a, .dev button { font: inherit; padding: 4px 8px; border: 1px solid #999; background: #fff; color: #222; text-decoration: none; cursor: pointer; }
+
+    /* A typical consent banner */
+    #onetrust-banner-sdk { position: fixed; left: 0; right: 0; bottom: 0; background: #2e3a4d; color: #fff; padding: 18px 24px;
+      display: flex; gap: 16px; align-items: center; z-index: 2147483645; font: 15px/1.4 system-ui, sans-serif; }
+    #onetrust-banner-sdk p { margin: 0; flex: 1; }
+    #onetrust-banner-sdk button { padding: 8px 14px; border: 0; background: #6ad49b; font-weight: 700; }
+
+    /* A typical newsletter modal with a backdrop and scroll lock */
+    .nl-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9998; }
+    .nl-modal { position: fixed; z-index: 9999; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, 90vw);
+      background: #ffe9d6; padding: 28px; border-radius: 10px; font: 16px/1.4 system-ui, sans-serif; text-align: center; }
+    .nl-modal h3 { margin: 0 0 8px; font-size: 24px; }
+    .nl-modal input { width: 70%; padding: 8px; }
+  </style>
+</head>
+<body>
+  <div class="dev">
+    <a href="popup.html" target="_blank">popup</a>
+    <button onclick="devReset()">reset pet</button>
+    <button onclick="addPopup()">new pop-up</button>
+  </div>
+  <article>
+    <h1>The quiet history of the internet's smallest residents</h1>
+    <p>Long before anyone thought to put a creature on a web page, people were already decorating their corners of the
+      internet with little things that moved: spinning globes, under-construction signs, cursors with comet tails.</p>
+    <p>This page is a test bed. Your webling should drop in from the top, walk along these lines of text, hop between
+      paragraphs, and fall to the bottom of the screen when it runs out of road. Grab it and throw it.</p>
+    <h2>Things it can stand on</h2>
+    <div class="card">
+      <p>Any line of visible text is a platform. Short lines, long lines, links like <a href="#">this one</a>, and
+        the headings above.</p>
+    </div>
+    <p>It ignores text in inputs, scripts and anything fixed to the screen, because those don't move with the page.</p>
+    <h2>Things it eats</h2>
+    <p>A cookie banner sits at the bottom of this page. A newsletter pop-up appears a few seconds after load. Watch
+      your webling notice them, jump on, and chew its way across. Then press "Spit it out" to put them back.</p>
+    <p>Scroll down and it drops back in from the top. Leave the page alone for 45 seconds and it falls asleep.</p>
+    <h2>More words to walk on</h2>
+    <p>Lorem ipsum is boring, so here are some facts instead. Octopuses have three hearts. A group of flamingos is a
+      flamboyance. Honey found in ancient tombs is still edible. Bananas are berries; strawberries are not.</p>
+    <p>Wombats make cube-shaped droppings. Sea otters hold hands while they sleep. The inventor of the frisbee was
+      turned into a frisbee after he died. Scotland's national animal is the unicorn.</p>
+    <p>There are more possible games of chess than atoms in the observable universe. Sloths can hold their breath
+      longer than dolphins. A day on Venus is longer than a year on Venus.</p>
+  </article>
+
+  <div id="onetrust-banner-sdk" role="region" aria-label="Cookie banner">
+    <p>We use cookies to improve your experience and for marketing. Read our cookie policy.</p>
+    <button>Accept all</button><button>Reject</button>
+  </div>
+
+  <script>
+    function addPopup() {
+      const back = document.createElement('div');
+      back.className = 'nl-backdrop';
+      const modal = document.createElement('div');
+      modal.className = 'nl-modal';
+      modal.setAttribute('role', 'dialog');
+      modal.innerHTML = '<h3>Don\'t miss a thing!</h3><p>Subscribe to our newsletter and get 10% off your first order.</p><input placeholder="you@example.com"> <button>Join</button>';
+      document.body.append(back, modal);
+      document.body.style.overflow = 'hidden';
+    }
+    setTimeout(addPopup, 3500);
+  </script>
+
+  <script src="chrome-shim.js"></script>
+  <script src="../extension/shared/config.js"></script>
+  <script src="../extension/shared/sprite.js"></script>
+  <script src="../extension/shared/pet.js"></script>
+  <script src="../extension/background.js"></script>
+  <script>
+    // Load the content scripts in manifest order, after hatching a pet.
+    (async () => {
+      await devInstall();
+      const s = await chrome.runtime.sendMessage({ type: 'state' });
+      if (!s.pet.hatched) await chrome.runtime.sendMessage({ type: 'hatch', name: 'Mochi', presence: true });
+      const manifest = await (await fetch('../extension/manifest.json')).json();
+      for (const f of manifest.content_scripts[0].js) {
+        if (f.startsWith('shared/')) continue; // already loaded above
+        await new Promise((ok, fail) => {
+          const el = document.createElement('script');
+          el.src = '../extension/' + f;
+          el.onload = ok;
+          el.onerror = fail;
+          document.body.appendChild(el);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "webling-presence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Relays who's on a page and boops between weblings. Stores nothing.",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test 'test/*.test.mjs'"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

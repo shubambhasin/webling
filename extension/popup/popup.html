@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webling</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main id="app" aria-live="polite"></main>
+  <div id="share" class="share" hidden>
+    <div class="sheet">
+      <img id="card" alt="Your webling's share card">
+      <div class="row">
+        <button id="download">Download</button>
+        <button id="copy">Copy image</button>
+        <button id="post" class="primary">Post on X</button>
+      </div>
+      <button id="close" class="link">Close</button>
+    </div>
+  </div>
+  <script src="../shared/config.js"></script>
+  <script src="../shared/sprite.js"></script>
+  <script src="../shared/pet.js"></script>
+  <script src="card.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

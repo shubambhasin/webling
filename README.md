@@ -1,0 +1,95 @@
+# Webling
+
+A tiny pixel pet that lives on the internet. Hatch one, and it follows you to every site: it walks
+along the lines of text, hops between paragraphs, eats cookie banners and pop-ups, grows up, and
+meets the weblings of other people reading the same page.
+
+Chrome extension (Manifest V3, no build step) plus a small WebSocket presence server.
+
+## Try it
+
+```bash
+cd server && npm install && cd ..
+```
+
+```bash
+npm run server
+```
+
+Then in Chrome: `chrome://extensions` → Developer mode → **Load unpacked** → pick `extension/`.
+The welcome tab opens; name your egg and hatch it. Open any article.
+
+## Develop without reloading the extension
+
+```bash
+npm run dev
+```
+
+Open <http://localhost:5180/dev/>. The harness runs the real background, content and popup scripts
+in one page with a `chrome.*` stand-in (`dev/chrome-shim.js`), on a test article with a cookie banner
+and a newsletter pop-up. Open it in two tabs to see presence. `/dev/popup.html` is the popup.
+Add `?timers` to drive animation from timers (for automated checks in background tabs).
+
+```bash
+npm test
+```
+
+## What's where
+
+| | |
+| --- | --- |
+| `extension/shared/sprite.js` | the pet's pixel art (built from eye/mouth/feet parts), colours from a seed, frame baking |
+| `extension/shared/pet.js` | life rules: stages, xp, hunger, weekly stats |
+| `extension/background.js` | owns saved state; applies messages one at a time so tabs never clobber each other |
+| `extension/content/world.js` | finds platforms: the top of every visible text line, plus the screen bottom |
+| `extension/content/actor.js` | the pet: walk, jump, fall, sleep, drag and throw, poke |
+| `extension/content/eater.js` | finds cookie banners and promo modals and eats them (with undo) |
+| `extension/content/presence.js` | other people's weblings on the same page, and boops |
+| `extension/popup/` | hatching, the pet's home, settings, the share card |
+| `server/` | presence relay; stores nothing |
+
+## How the pieces behave
+
+**Growth.** New site +5 xp, cookie banner +15, pop-up +20, boop +1, being booped +2.
+Baby → Grown-up at 120 xp → Legend (with a crown) at 1500. Each pet's colour comes from its seed.
+
+**Hunger.** The tummy drains 4% an hour. Meals refill it (cookie banner +20, pop-up +30), and you can
+give a snack every 3 hours. A hungry pet is slower and says so. It never dies, because guilt makes
+people uninstall.
+
+**Eating.** Only cosmetic: the element is clipped away behind the pet's mouth, then hidden with inline
+styles. Backdrops and scroll locks that came with a pop-up are undone too. Nothing is clicked, so a
+consent banner is left unanswered (sites treat that as no consent). A modal that appears within 3s of
+your click is treated as one you asked for and is left alone. Every meal has **Spit it out**, and
+eating can be switched off globally or per site.
+
+**Presence.** The room is SHA-256 of the page's origin and path, so the server never sees a URL,
+query string or title. The only other thing shared is the pet's name, colour seed and stage. Other
+pets aren't position-synced: each visitor's pet is simulated locally on your copy of the page.
+Presence is skipped in incognito, on pages with a password field, and on mail, docs, banking,
+payment and sign-in hosts. Pets connect only while the tab is visible.
+
+## Before publishing
+
+- Deploy `server/` (any Node host: Fly, Render, Railway) behind TLS and set `presenceUrl` in
+  `extension/shared/config.js` to the `wss://` address. Set `shareUrl` to the landing page.
+- `npm run zip` writes `dist/webling-<version>.zip` and warns if presence still points at localhost.
+- Chrome Web Store: the listing needs a privacy section. It's honest and short: no browsing history
+  leaves the device. Visited hostnames are stored locally for the "sites explored" count only.
+
+## Known gaps
+
+- Check that page CSPs never block the content script's WebSocket on strict sites. If one does, move
+  the socket into the service worker and relay to tabs over a port.
+- Pop-up detection is heuristic, so expect false negatives on unusual sites before false positives. Add
+  cases to `classify()` in `eater.js` as you find them.
+- Platforms are text-line tops, not real glyph outlines; images and buttons aren't platforms yet.
+- The presence server is single-process with in-memory rooms. For scale, move rooms to Cloudflare
+  Durable Objects (one object per room hash) or shard by room.
+
+## Next for growth
+
+- GIF capture of your pet doing something on a famous site (the TikTok/X loop).
+- Egg mixing: an invite link where your egg and a friend's make a new pet.
+- Weekly "webling wrapped" card from the `lastWeek` stats that are already being kept.
+- The web-only funnel: paste any URL and set pets loose on a screenshot of it.
