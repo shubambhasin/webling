@@ -6,7 +6,6 @@
   const WL = (globalThis.WL ||= {});
   const G = 1500; // gravity, px/s²
   const PX = 3; // CSS pixels per art pixel
-  const POKES = ['hi!', 'hehe', 'boop!', '♥', 'again!', 'wheee', 'hello you'];
 
   class Pet {
     constructor(look, { ghost = false } = {}) {
@@ -32,8 +31,10 @@
 
     get w() { return WL.art.size(this.look.stage)[0] * PX; }
     get h() { return WL.art.size(this.look.stage)[1] * PX; }
-    get speed() { return (this.look.stage === 'baby' ? 30 : 40) * (this.mood === 'hungry' ? 0.6 : 1); }
-    get grounded() { return this.mode === 'walk' || this.mode === 'idle' || this.mode === 'sleep'; }
+    get vibe() { return WL.voice.vibeOf(this.look); }
+    get traits() { return WL.voice.VIBES[this.vibe]; }
+    get speed() { return (this.look.stage === 'baby' ? 30 : 40) * (this.mood === 'hungry' ? 0.6 : 1) * this.traits.speed; }
+    get grounded() { return ['walk', 'idle', 'sleep', 'pose'].includes(this.mode); }
     get busy() { return this.mode === 'tween' || this.mode === 'eat'; }
 
     // Drop in from the top of the screen.
@@ -88,7 +89,8 @@
       this.vx = this.vy = 0;
       this.mode = 'idle';
       this.think = 0.4 + Math.random();
-      if (hard) this.say(['oof', 'ow!', 'safe!'][Math.floor(Math.random() * 3)], 1200);
+      if (hard) this.strike('shock', 0.5);
+      this.emit('land', { hard, floor: p === 'floor' });
     }
 
     walk(dt) {
@@ -100,9 +102,16 @@
       }
       if (p === 'floor') this.y = WL.world.floor();
       if (this.mode === 'sleep') {
-        if (performance.now() - WL.input.lastMove < 1500) { this.mode = 'idle'; this.happy(1); }
-        else if (Math.random() < dt * 0.5) WL.fx.zzz(this.sx + this.w * 0.3, this.sy - this.h);
+        if (performance.now() - WL.input.lastMove < 1500) {
+          this.mode = 'idle';
+          this.happy(1);
+          this.emit('wake');
+        } else if (Math.random() < dt * 0.5) WL.fx.zzz(this.sx + this.w * 0.3, this.sy - this.h);
         return;
+      }
+      if (this.mode === 'pose' && this.pose === 'dance' && (this.danceT = (this.danceT || 0) + dt) > 0.35) {
+        this.danceT = 0;
+        this.dir *= -1;
       }
       if ((this.think -= dt) <= 0) this.decide();
       if (this.mode !== 'walk') return;
@@ -120,14 +129,26 @@
     decide() {
       if (!this.ghost && performance.now() - WL.input.lastMove > 45e3) {
         this.mode = 'sleep';
+        this.emit('sleep');
         return;
+      }
+      // Now and then, strike a pose in character: side-eye, unimpressed, or a little dance.
+      const idle = this.traits.idle;
+      const p = Math.random() * 4;
+      let acc = 0;
+      for (const pose of ['sideeye', 'meh', 'dance']) {
+        if (p < (acc += idle[pose])) {
+          this.strike(pose, pose === 'dance' ? 2 + Math.random() * 1.5 : 1.5 + Math.random() * 1.5);
+          return this.emit('pose', { pose });
+        }
       }
       const r = Math.random();
       const rest = this.mood === 'hungry' ? 0.45 : 0.25;
+      const jump = this.vibe === 'chaotic' ? 0.4 : 0.2;
       if (r < rest) {
         this.mode = 'idle';
         this.think = 1 + Math.random() * 2.5;
-      } else if (r < rest + 0.2 && this.jumpSomewhere()) {
+      } else if (r < rest + jump && this.jumpSomewhere()) {
         // in the air
       } else {
         this.mode = 'walk';
@@ -172,6 +193,20 @@
 
     happy(s) { this.happyT = Math.max(this.happyT, s); }
 
+    // Hold a pose (sideeye, meh, shock, dance) for a while, if standing somewhere.
+    strike(pose, secs) {
+      if (!this.grounded && this.mode !== 'jump' && this.mode !== 'fall') return;
+      if (this.grounded) this.mode = 'pose';
+      this.pose = pose;
+      this.poseT = secs;
+      this.think = secs;
+    }
+
+    // Tell the brain (personality) something happened. Ghosts keep their thoughts to themselves.
+    emit(event, data) {
+      if (!this.ghost) WL.brain?.emit(this, event, data);
+    }
+
     // ---- moving to a point on screen (used by the eater) ----
     tweenTo(sx, sy, secs = 0.55) {
       if (!this.vp) { this.x -= scrollX; this.y -= scrollY; this.vp = true; }
@@ -213,6 +248,7 @@
       else if (this.mode === 'tween' || this.mode === 'jump') clip = this.happyT > 0 ? 'happy' : 'jump';
       else if (this.mode === 'fall') clip = 'fall';
       else if (this.mode === 'sleep') clip = 'sleep';
+      else if (this.mode === 'pose') clip = this.pose;
       else if (this.happyT > 0) clip = 'happy';
       else if (this.mode === 'walk') clip = 'walk';
       else {
@@ -228,7 +264,8 @@
       const c = WL.art.CLIPS[this.clip] || WL.art.CLIPS.idle;
       const frame = Math.floor(this.clipT * c.fps) % c.frames.length;
       const img = WL.art.bake(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0);
-      const bob = this.clip === 'idle' && Math.floor(this.clipT * 2) % 2 ? PX : 0;
+      const bob = this.clip === 'idle' && Math.floor(this.clipT * 2) % 2 ? PX
+        : this.clip === 'dance' && frame === 1 ? -PX * 2 : 0;
       const left = this.sx - this.w / 2, top = this.sy - this.h;
       ctx.globalAlpha = this.ghost ? 0.88 : 1;
       ctx.drawImage(img, Math.round(left * dpr), Math.round((top + bob) * dpr));
@@ -251,11 +288,15 @@
       this.sayTimer = setTimeout(() => this.bubble.classList.remove('on'), ms);
     }
 
+    // Ghosts get booped; your own pet reacts in character (see brain.js).
     poke() {
-      this.hop();
-      WL.fx.heart(this.sx, this.sy - this.h);
-      if (this.onPoke) this.onPoke(this);
-      else this.say(this.mood === 'hungry' ? 'so hungry…' : POKES[Math.floor(Math.random() * POKES.length)], 1400);
+      if (this.onPoke) {
+        this.hop();
+        WL.fx.heart(this.sx, this.sy - this.h);
+        this.onPoke(this);
+      } else {
+        this.emit('poke');
+      }
     }
 
     // ---- grab, throw and poke ----
@@ -286,6 +327,7 @@
           this.on = null;
           this.vp = false;
           this.hit.classList.add('held');
+          this.emit('held');
         }
         if (this.mode !== 'held') return;
         this.x = e.clientX + scrollX;
@@ -304,7 +346,7 @@
           this.vx = a ? clamp((b.x - a.x) / dt) : 0;
           this.vy = a ? clamp((b.y - a.y) / dt) : 0;
           this.mode = 'fall';
-          if (Math.hypot(this.vx, this.vy) > 900) this.say('wheee!', 1200);
+          if (Math.hypot(this.vx, this.vy) > 900) this.emit('thrown');
         } else if (e.type === 'pointerup') {
           this.poke();
         }

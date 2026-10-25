@@ -78,3 +78,43 @@ test('concurrent messages from several tabs are all applied', async () => {
   await Promise.all(Array.from({ length: 10 }, () => bg.send({ type: 'boop' })));
   assert.equal(bg.store.pet.stats.boops, 10);
 });
+
+test('visits are counted per site, and old saves without counts still work', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Mochi' });
+  bg.store.passport = { 'old.example': 1700000000000 }; // a save from before visit counts
+  let r = await bg.send({ type: 'visit', host: 'old.example' });
+  assert.equal(r.isNew, false);
+  assert.equal(r.visits, 2);
+  r = await bg.send({ type: 'visit', host: 'new.example' });
+  assert.equal(r.isNew, true);
+  assert.equal(r.visits, 1);
+  for (let i = 0; i < 3; i++) r = await bg.send({ type: 'visit', host: 'new.example' });
+  assert.equal(r.visits, 4);
+  assert.equal(bg.store.pet.stats.sites, 1, 'only new sites count as explored');
+});
+
+test('aura: meals and boops earn it, spitting food out costs it', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Mochi' });
+  let s = await bg.send({ type: 'ate', kind: 'popup' });
+  assert.equal(s.pet.aura, 15);
+  s = await bg.send({ type: 'boop' });
+  assert.equal(s.pet.aura, 18);
+  s = await bg.send({ type: 'uneat', kind: 'popup' });
+  assert.equal(s.pet.aura, 18 - 15 - 8);
+});
+
+test('aura the page reports: only known reasons, at most once per 8s each', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Mochi' });
+  assert.equal((await bg.send({ type: 'aura', reason: 'landing' })).delta, 4);
+  assert.equal((await bg.send({ type: 'aura', reason: 'landing' })).delta, 0, 'rate limited');
+  assert.equal((await bg.send({ type: 'aura', reason: 'thrown' })).delta, -3);
+  assert.equal((await bg.send({ type: 'aura', reason: 'popup' })).delta, 0, 'meals only count through "ate"');
+  assert.equal((await bg.send({ type: 'aura', reason: 'free_aura_pls' })).delta, 0);
+  assert.equal(bg.store.pet.aura, 1);
+});

@@ -161,7 +161,8 @@
     const y = Math.max(r.top, pet.h + 6);
     const x0 = fromLeft ? Math.max(r.left + 6, pet.w / 2) : Math.min(r.right - 6, innerWidth - pet.w / 2);
     const x1 = fromLeft ? Math.min(r.right, innerWidth - pet.w / 2) : Math.max(r.left, pet.w / 2);
-    pet.say(kind === 'cookie' ? 'ooh, a cookie' : 'ooh, snack', 1400);
+    const snackText = (el.innerText || '').slice(0, 1500);
+    WL.brain.say(kind === 'cookie' ? 'eat_start_cookie' : 'eat_start_popup', {}, { ms: 1400 });
     await pet.tweenTo(x0, y);
     if (meal.aborted) return;
     pet.dir = fromLeft ? 1 : -1;
@@ -189,7 +190,8 @@
     const scrollSaved = extras.length || kind === 'popup' || coversScreen(r) ? unlockScroll() : [];
 
     pet.release();
-    pet.say(kind === 'cookie' ? 'nom! cookie banner' : 'nom! pop-up gone', 2000);
+    WL.brain.say(afterMeal(kind, snackText), {}, { ms: 2600 });
+    WL.brain.auraFx(WL.model.AURA[kind]);
     WL.fx.heart(pet.sx, pet.sy - pet.h);
     WL.bg({ type: 'ate', kind });
     WL.overlay.toast(`${pet.look.name || 'Your webling'} ate a ${kind === 'cookie' ? 'cookie banner' : 'pop-up'}.`, 'Spit it out', () => {
@@ -197,8 +199,19 @@
       extraSaved.forEach(restoreStyles);
       scrollSaved.forEach(restoreStyles);
       WL.bg({ type: 'uneat', kind });
-      pet.say('fine… ptooey', 1600);
+      WL.brain.say('spat', {}, { ms: 2000 });
+      WL.brain.auraFx(WL.model.AURA.spat - WL.model.AURA[kind]);
     });
+  }
+
+  // What to say after a meal: a take on what it actually said, if it said something worth roasting.
+  function afterMeal(kind, text) {
+    if (Math.random() < 0.7) {
+      if (/accept all/i.test(text)) return 'ate_accept_all';
+      if (/\d+\s*% off|discount/i.test(text)) return 'ate_discount';
+      if (/newsletter|subscribe/i.test(text)) return 'ate_newsletter';
+    }
+    return kind === 'cookie' ? 'ate_cookie' : 'ate_popup';
   }
 
   // A clip-path that keeps the uneaten part, with a bitten (zig-zag) edge.

@@ -102,6 +102,8 @@
     } else if (m.t === 'join') {
       count = m.count;
       addGhost(m.peer, true);
+      if (count >= 5) WL.brain.remark('crowd', { n: count }, { every: 300e3 });
+      else setTimeout(() => WL.brain.remark('ghost_join', {}, { every: 60e3, chance: 0.6 }), 1800);
     } else if (m.t === 'leave') {
       count = m.count;
       removeGhost(m.id);
@@ -121,7 +123,7 @@
     pet.onPoke = () => boop(g);
     ghosts.set(peer.id, g);
     WL.pets.add(pet);
-    if (greet) setTimeout(() => pet.say('hi!', 1500), 900);
+    if (greet) setTimeout(() => WL.brain.say('ghost_hi', {}, { ms: 1500, pet }), 900);
   }
 
   function removeGhost(id) {
@@ -150,7 +152,8 @@
     if (now - g.boopAt < 1200) return;
     g.boopAt = now;
     send({ t: 'emote', to: g.peer.id, kind: 'boop' });
-    g.pet.say(`you booped ${g.pet.look.name || 'them'}`, 1300);
+    WL.brain.say('boop_sent', { other: g.pet.look.name || 'a webling' }, { ms: 1500, pet: g.pet });
+    WL.brain.auraFx(WL.model.AURA.boop);
     WL.bg({ type: 'boop' });
   }
 
@@ -159,8 +162,8 @@
     const from = ghosts.get(m.from);
     if (m.to === me) {
       WL.me.hop();
-      WL.fx.heart(WL.me.sx, WL.me.sy - WL.me.h);
-      WL.me.say(`${m.name || 'someone'} booped you!`, 2000);
+      WL.brain.say('booped', { other: m.name || 'someone' }, { ms: 2200 });
+      WL.brain.auraFx(WL.model.AURA.booped);
       if (from) from.pet.happy(1.2);
       WL.bg({ type: 'booped' });
     } else {

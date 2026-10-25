@@ -54,13 +54,14 @@
     g.font = '500 26px ui-monospace, SFMono-Regular, Menlo, monospace';
     g.fillStyle = pal.l;
     const info = WL.model.stageInfo(stage);
-    g.fillText(`${info.label.toLowerCase()} webling · day ${WL.model.ageDays(pet)}`, x, 214);
+    const vibe = WL.voice.VIBES[WL.voice.vibeOf(pet)];
+    g.fillText(`${info.label.toLowerCase()} · ${vibe.label.toLowerCase()} · day ${WL.model.ageDays(pet)}`, x, 214);
 
     const rows = [
+      [pet.aura || 0, `aura · ${WL.model.auraTier(pet)}`],
       [pet.stats.cookies, pet.stats.cookies === 1 ? 'cookie banner eaten' : 'cookie banners eaten'],
       [pet.stats.popups, pet.stats.popups === 1 ? 'pop-up devoured' : 'pop-ups devoured'],
       [sites, sites === 1 ? 'site explored' : 'sites explored'],
-      [pet.stats.boops, pet.stats.boops === 1 ? 'webling booped' : 'weblings booped'],
     ];
     rows.forEach(([n, label], i) => {
       const y = 300 + i * 66;
@@ -76,6 +77,14 @@
       g.fillText(label, x + 44 + nw, y);
     });
 
+    // its mantra, under the pet
+    const quote = `“${WL.voice.mantra(pet)}”`;
+    g.textAlign = 'center';
+    g.fillStyle = PAPER;
+    g.font = `700 ${fit(g, quote, 500, 26, 500)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+    g.fillText(quote, 300, 560);
+    g.textAlign = 'start';
+
     g.fillStyle = 'rgba(255,253,245,0.5)';
     g.font = '500 22px ui-monospace, SFMono-Regular, Menlo, monospace';
     g.fillText('hatch your own webling →', x, 590);
@@ -84,9 +93,9 @@
     return c;
   }
 
-  function fit(g, text, max, size) {
-    for (; size > 36; size -= 4) {
-      g.font = `800 ${size}px ui-monospace, monospace`;
+  function fit(g, text, max, size, weight = 800) {
+    for (; size > 14; size -= 2) {
+      g.font = `${weight} ${size}px ui-monospace, monospace`;
       if (g.measureText(text).width <= max) break;
     }
     return size;
@@ -98,7 +107,8 @@
     if (s.cookies) bits.push(`${s.cookies} cookie banner${s.cookies === 1 ? '' : 's'}`);
     if (s.popups) bits.push(`${s.popups} pop-up${s.popups === 1 ? '' : 's'}`);
     const ate = bits.length ? `has eaten ${bits.join(' and ')}` : 'is out exploring';
-    return `My webling ${pet.name} ${ate} across ${sites} site${sites === 1 ? '' : 's'}. Hatch yours:`;
+    const vibe = WL.voice.VIBES[WL.voice.vibeOf(pet)].label.toLowerCase();
+    return `My ${vibe} webling ${pet.name} ${ate} across ${sites} site${sites === 1 ? '' : 's'}. Aura: ${WL.model.auraTier(pet)}. Hatch yours:`;
   }
 
   WL.card = { render, shareText };

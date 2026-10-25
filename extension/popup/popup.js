@@ -59,6 +59,8 @@
       state = await send({ type: 'hatch', name: name.value || suggestion, presence: $('#presence').checked });
       render();
       stage.celebrate();
+      const vibe = WL.voice.VIBES[WL.voice.vibeOf(state.pet)];
+      speak(null, {}, `${state.pet.name} hatched with ${vibe.label.toLowerCase()} energy ✨`);
     };
   }
 
@@ -69,13 +71,19 @@
     const full = M.fullness(p, now), mood = M.mood(p, now);
     const snackWait = p.snackAt + M.SNACK_COOLDOWN - now;
     const w = p.week;
+    const vibeId = WL.voice.vibeOf(p), vibe = WL.voice.VIBES[vibeId];
     app.innerHTML = `
       <header><b>webling</b><span class="pill">${info.label}</span></header>
       <canvas class="stage" aria-label="${esc(p.name)}, click to poke"></canvas>
+      <p class="said" id="said" aria-live="polite">“${esc(WL.voice.mantra(p))}” <small>today's mantra</small></p>
       <div class="name-row">
         <input type="text" id="name" value="${esc(p.name)}" maxlength="16" aria-label="Name">
         <span class="age">day ${M.ageDays(p, now)}</span>
       </div>
+      <div class="vibe-row">
+        <span class="tag">${esc(vibe.label)}</span><span class="blurb">${esc(vibe.blurb)}</span>
+      </div>
+      <div class="aura-row"><b>✦ ${(p.aura || 0).toLocaleString()} aura</b><span>${esc(M.auraTier(p))}</span></div>
       <div class="bar">
         <label>Growth <span>${prog.next ? `${p.xp - prog.cur.min} / ${prog.next.min - prog.cur.min} xp to ${prog.next.label.toLowerCase()}` : `${p.xp} xp, fully grown`}</span></label>
         <div class="track"><i style="width:${Math.round(prog.frac * 100)}%"></i></div>
@@ -104,13 +112,17 @@
       <p class="week">This week: ${n(w.cookies, 'cookie banner')}, ${n(w.popups, 'pop-up')}, ${n(w.sites, 'new site')}, ${n(w.boops, 'boop')}.</p>`;
 
     stage = new Stage($('.stage'), () => ({ stage: M.stage(state.pet), seed: state.pet.seed }), mood);
+    stage.onPoke = () => speak(mood === 'hungry' && Math.random() < 0.5 ? 'hungry' : 'poke');
 
     $('#name').onchange = async (e) => (state = await send({ type: 'rename', name: e.target.value }));
     $('#snack').onclick = async () => {
       const r = await send({ type: 'snack' });
       state = r;
       render();
-      if (r.ok) stage.celebrate();
+      if (r.ok) {
+        stage.celebrate();
+        speak('fed');
+      }
     };
     $('#share-btn').onclick = openShare;
     $('#eat').onchange = async (e) => { state = await send({ type: 'settings', patch: { eat: e.target.checked } }); render(); };
@@ -120,6 +132,13 @@
   }
 
   const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+
+  // Put a line from the pet's voice under the stage.
+  function speak(event, vars = {}, text = null) {
+    const said = $('#said');
+    if (!said) return;
+    said.textContent = text || WL.voice.line(event, WL.voice.vibeOf(state.pet), { name: state.pet.name, ...vars }) || '';
+  }
 
   const fmtWait = (ms) => {
     const m = Math.ceil(ms / 60e3);
@@ -189,6 +208,7 @@
       if (this.look().stage === 'egg') { this.wobble = 0.6; return; }
       if (this.y === 0) this.vy = -260;
       this.happyT = 1;
+      this.onPoke?.();
     }
 
     celebrate() {

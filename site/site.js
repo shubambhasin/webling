@@ -10,9 +10,11 @@
   let state = await send({ type: 'state' });
   const returning = state.pet.hatched;
   if (!returning) state = await send({ type: 'hatch', name: WL.model.randomName(), presence: false });
+  const vibe = WL.voice.VIBES[WL.voice.vibeOf(state.pet)];
   $('#hello').textContent = returning
-    ? `Welcome back, ${state.pet.name}. It's on this page somewhere.`
-    : `Meet ${state.pet.name}. It just hatched on this page. Look around.`;
+    ? `Welcome back, ${state.pet.name}. Still ${vibe.label.toLowerCase()}. It's on this page somewhere.`
+    : `Meet ${state.pet.name}. Vibe: ${vibe.label.toLowerCase()}. It just hatched on this page. Look around.`;
+  drawVibes();
   showScore(state.pet);
   chrome.storage.onChanged.addListener((c) => c.pet && showScore(c.pet.newValue));
 
@@ -90,7 +92,31 @@
     if (!pet) return;
     $('#n-cookies').textContent = pet.stats.cookies;
     $('#n-popups').textContent = pet.stats.popups;
-    $('#n-xp').textContent = pet.xp;
+    $('#n-aura').textContent = pet.aura || 0;
+    $('#n-tier').textContent = `aura · ${WL.model.auraTier(pet)}`;
+  }
+
+  // ---- one card per vibe, each with a pet of that vibe and its lines on rotation ----
+  function drawVibes() {
+    const grid = $('#vibe-grid');
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    WL.voice.VIBE_IDS.forEach((id, i) => {
+      let seed = 0;
+      while (WL.voice.vibeOf({ seed: `vibe${seed}` }) !== id) seed++;
+      const v = WL.voice.VIBES[id];
+      const card = document.createElement('article');
+      card.innerHTML = `<canvas width="84" height="72" aria-hidden="true"></canvas><h3>${v.label}</h3>
+        <p class="blurb">${v.blurb}</p><p class="line" aria-live="off"></p>`;
+      const art = WL.art.bake('adult', id === 'unbothered' ? 'sideeye' : id === 'dramatic' ? 'shock' : 'happy', 0, `vibe${seed}`, 6);
+      card.querySelector('canvas').getContext('2d').drawImage(art, 0, 0);
+      grid.appendChild(card);
+      const line = card.querySelector('.line');
+      const own = WL.voice.LINES.ambient[id];
+      let n = i;
+      const next = () => (line.textContent = `“${own[n++ % own.length]}”`);
+      next();
+      if (!still) setInterval(next, 3600 + i * 400);
+    });
   }
 
   // ---- the row of weblings in the hero ----

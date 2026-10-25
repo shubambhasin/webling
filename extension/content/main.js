@@ -40,8 +40,12 @@
     WL.pets.add(WL.me);
     requestAnimationFrame(loop);
 
+    WL.brain.start();
     WL.bg({ type: 'visit', host }).then((r) => {
-      if (r?.isNew && Math.random() < 0.5) setTimeout(() => WL.me.say(`ooh, ${host}`, 1800), 1500);
+      setTimeout(() => {
+        WL.brain.arrive(r || {});
+        if (r?.isNew) WL.brain.auraFx(WL.model.AURA.site);
+      }, 1800);
     });
     onSettings(state.settings);
     setInterval(tick, 60e3);
@@ -50,15 +54,23 @@
   function onPet(pet) {
     if (!pet) return;
     if (!started) return pet.hatched && WL.bg({ type: 'state' }).then(start);
+    const old = WL.state.pet;
     const before = WL.myLook();
     WL.state.pet = pet;
     const after = WL.myLook();
     WL.me.look = after;
     WL.me.mood = WL.model.mood(pet);
     if (after.stage !== before.stage) {
-      WL.me.say(after.stage === 'legend' ? 'I am LEGEND' : 'I grew up!', 2600);
+      WL.brain.announce(after.stage === 'legend' ? 'grew_legend' : 'grew_adult', {}, { ms: 3200 });
       WL.me.happy(2.5);
+      WL.fx.sparkles(WL.me.sx, WL.me.sy - WL.me.h / 2, 8);
       for (let i = 0; i < 5; i++) setTimeout(() => WL.fx.heart(WL.me.sx + (i - 2) * 10, WL.me.sy - WL.me.h), i * 120);
+    } else if (WL.model.auraTier(pet) !== WL.model.auraTier(old) && (pet.aura || 0) > (old.aura || 0)) {
+      WL.brain.announce('tier_up', { tier: WL.model.auraTier(pet) }, { ms: 3000 });
+      WL.fx.sparkles(WL.me.sx, WL.me.sy - WL.me.h / 2, 8);
+    } else if (pet.snackAt > old.snackAt) {
+      WL.brain.say('fed');
+      WL.me.happy(1.5);
     }
     if (after.name !== before.name || after.stage !== before.stage) WL.presence.updateLook();
   }
@@ -74,8 +86,11 @@
   // Once a minute: get hungrier, and say so now and then.
   function tick() {
     WL.me.mood = WL.model.mood(WL.state.pet);
-    if (WL.me.mood === 'hungry' && Math.random() < 0.3) WL.me.say('hungry… any pop-ups?', 2400);
+    if (WL.me.mood === 'hungry') WL.brain.remark('hungry', {}, { every: 240e3 });
   }
+
+  // Main-character aura and up is visible: a sparkle now and then.
+  const AURA_GLOW = WL.model.AURA_TIERS.find((t) => t.label === 'main character').min;
 
   let last = performance.now();
   function loop(now) {
@@ -83,6 +98,9 @@
     last = now;
     const { ctx, canvas, dpr } = WL.overlay;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if ((WL.state.pet.aura || 0) >= AURA_GLOW && Math.random() < dt * 0.7) {
+      WL.fx.emote('sparkle', WL.me.sx + (Math.random() - 0.5) * WL.me.w * 1.4, WL.me.sy - Math.random() * WL.me.h);
+    }
     for (const p of WL.pets) {
       p.update(dt);
       if (p !== WL.me) p.draw(ctx, dpr);

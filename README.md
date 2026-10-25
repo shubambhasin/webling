@@ -42,12 +42,16 @@ Add `?timers` to drive animation from timers (for automated checks in background
 npm test
 ```
 
-- `npm run test:unit`: the art, life rules, background state handling and presence server (seconds).
+- `npm run test:unit`: the art, life rules, the voice, background state handling and the presence server
+  (seconds). `voice.test` checks every event the code names has lines for every vibe, every line fits
+  a bubble, fills its placeholders and stays PG, and that site detection can't be fooled by lookalike
+  domains.
 - `npm run test:e2e`: real headless Chrome, driven over the DevTools protocol with no dependencies
   (`test/browser.mjs`). `eater.e2e` covers what gets eaten and what doesn't, undo, per-site off, and
   regressions: pages that never stop changing, banners arriving mid-meal or hidden when their turn
   comes, dragging the pet mid-leap, and stalled meals. `site.e2e` builds the landing page and clicks
   through it like a visitor, including "Another cookie banner" while animation frames are throttled.
+  `personality.e2e` pokes, yeets and doomscrolls at a real pet and checks what it says back.
   Uses your installed Chrome; set `CHROME_PATH` for another one. Skipped when none is found.
 
 ## What's where
@@ -55,7 +59,9 @@ npm test
 | | |
 | --- | --- |
 | `extension/shared/sprite.js` | the pet's pixel art (built from eye/mouth/feet parts), colours from a seed, frame baking |
-| `extension/shared/pet.js` | life rules: stages, xp, hunger, weekly stats |
+| `extension/shared/pet.js` | life rules: stages, xp, aura and its tiers, hunger, weekly stats |
+| `extension/shared/voice.js` | the five vibes, 300+ lines by event and vibe, site detection, daily mantras |
+| `extension/content/brain.js` | the personality on a page: what it notices, when it speaks, aura moments |
 | `extension/background.js` | owns saved state; applies messages one at a time so tabs never clobber each other |
 | `extension/content/world.js` | finds platforms: the top of every visible text line, plus the screen bottom |
 | `extension/content/actor.js` | the pet: walk, jump, fall, sleep, drag and throw, poke |
@@ -65,6 +71,25 @@ npm test
 | `server/` | presence relay; stores nothing |
 
 ## How the pieces behave
+
+**Vibe.** Every egg hatches with one of five vibes, picked from its seed: Unbothered, Chaotic,
+Dramatic, Wholesome or Chronically online. It sets how the pet talks (its own lines are twice as
+likely as the shared ones), how fast it moves, how chatty it is, and its idle moves (side-eye,
+unimpressed, a little dance).
+
+**What it notices.** Which kind of site you're on (19 kinds, 125 domains, from LinkedIn to shopping to GitHub),
+first visits versus sites you're on all the time, late nights and Mondays, doomscrolling (six screens
+in fifteen seconds), long reads, coming back to the tab, copying, mouse wiggling, pokes (playful →
+annoyed → "we're no longer mutuals"), being held and thrown, sticking a landing. Reactions to you
+always get a line. Unprompted remarks get at most one per ~35s (divided by the vibe's chattiness),
+with longer cooldowns per topic, and never while it's asleep, busy or being held. To add lines, edit
+`LINES` in `voice.js`; `voice.test` will tell you if one is too long or names a missing event.
+
+**Aura.** Earned by being iconic: new site +2, cookie banner +10, pop-up +15, boop +3, being booped
++5, snack +2, sticking a landing +4. Lost by being undignified: getting thrown −3, poke spam −5,
+spitting food out −8. Tiers: aura debt, NPC, side character (50), main character (250, it starts to
+sparkle), aura farmer (1000), final boss (3000). The page can only report landings, throws and poke
+spam, each at most once per 8s; everything else is awarded by the background.
 
 **Growth.** New site +5 xp, cookie banner +15, pop-up +20, boop +1, being booped +2.
 Baby → Grown-up at 120 xp → Legend (with a crown) at 1500. Each pet's colour comes from its seed.

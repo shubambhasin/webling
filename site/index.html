@@ -26,8 +26,8 @@
     <section class="hero">
       <p class="eyebrow">a browser pet · free · open source</p>
       <h1>A tiny pet that lives on the internet.</h1>
-      <p class="lede">Hatch a webling and it comes with you to every site. It climbs your headlines, naps on your
-        paragraphs, eats cookie banners and pop-ups, and waves at other people's weblings on the same page.</p>
+      <p class="lede">Hatch a webling and it comes with you to every site. It climbs your headlines, eats cookie
+        banners and pop-ups, roasts your LinkedIn, clocks your doomscrolling, and farms aura while it's at it.</p>
       <div class="cta">
         <a class="btn primary" href="#install">Add it to Chrome</a>
         <span class="hint" id="hello">Yours just hatched. It's on this page. Look around.</span>
@@ -43,14 +43,21 @@
       <div class="score">
         <div><b id="n-cookies">0</b><span>cookie banners eaten</span></div>
         <div><b id="n-popups">0</b><span>pop-ups eaten</span></div>
-        <div><b id="n-xp">0</b><span>xp</span></div>
+        <div><b id="n-aura">0</b><span id="n-tier">aura · NPC</span></div>
       </div>
       <p class="actions">
         <button class="btn" id="summon">Summon a pop-up</button>
         <button class="btn ghost" id="rebanner">Another cookie banner</button>
         <span id="countdown" aria-live="polite"></span>
       </p>
-      <p class="small">Grab your webling and throw it. Poke it. Leave the page alone for a while and it falls asleep.</p>
+      <p class="small">Poke it (then keep poking, see what happens). Grab it and yeet it. Leave the page alone and it
+        falls asleep.</p>
+    </section>
+
+    <section class="vibes" id="vibes">
+      <h2>Five vibes. Zero filter.</h2>
+      <p>Every egg hatches with a vibe. It decides how your webling talks, moves and judges you.</p>
+      <div class="vibe-grid" id="vibe-grid"></div>
     </section>
 
     <section class="how" id="how">
@@ -70,6 +77,16 @@
           <h3>Meets other weblings</h3>
           <p>Reading something popular? Other people's weblings show up on the same page. Boop them and they boop you
             back.</p>
+        </article>
+        <article>
+          <h3>Has opinions</h3>
+          <p>It knows when you're on LinkedIn, shopping at 2am, or 40 minutes deep in a wiki hole, and it will say
+            something about it.</p>
+        </article>
+        <article>
+          <h3>Farms aura</h3>
+          <p>Eating pop-ups and sticking landings earns aura. Getting yeeted costs it. NPC to final boss, and it sparkles
+            once it's main character.</p>
         </article>
         <article>
           <h3>Grows up</h3>
@@ -110,6 +127,7 @@
   <script src="/ext/shared/config.js"></script>
   <script src="/ext/shared/sprite.js"></script>
   <script src="/ext/shared/pet.js"></script>
+  <script src="/ext/shared/voice.js"></script>
   <script src="/ext/background.js"></script>
   <script src="/site.js"></script>
 </body>

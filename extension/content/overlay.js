@@ -10,7 +10,7 @@
     .hit { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: grab; touch-action: none; }
     .hit.off { pointer-events: none; }
     .hit.held { cursor: grabbing; }
-    .bubble { position: absolute; left: 0; top: 0; white-space: nowrap; background: #fffdf5; border: 2px solid #1b1528;
+    .bubble { position: absolute; left: 0; top: 0; width: max-content; max-width: 230px; text-align: center; background: #fffdf5; border: 2px solid #1b1528;
       padding: 3px 7px; box-shadow: 2px 2px 0 #1b1528; opacity: 0; transition: opacity .15s; }
     .bubble.on { opacity: 1; }
     .bubble.ghost { background: #efeaff; font-weight: 500; }

@@ -10,8 +10,10 @@
         open: ['kbwkbbwkbk', 'kbkkbbkkbk'],
         closed: ['kbbbbbbbbk', 'kbkkbbkkbk'],
         happy: ['kbkkbbkkbk', 'kkbbkkbbkk'],
+        side: ['kbkwbbkwbk', 'kbkwbbkwbk'],
+        meh: ['kbkkbbkkbk', 'kbwkbbwkbk'],
       },
-      mouth: { smile: ['kpbbkkbbpk'], open: ['kpbkddkbpk'] },
+      mouth: { smile: ['kpbbkkbbpk'], open: ['kpbkddkbpk'], flat: ['kpbkkkkbpk'], o: ['kpbbddbbpk'] },
       belly: ['kbbllllbbk', '.kddddddk.'],
       feet: { a: '..k....k..', b: '.k......k.', tuck: '...k..k...' },
     },
@@ -21,10 +23,14 @@
         open: ['kbbwkbbbbwkbbk', 'kbbkkbbbbkkbbk'],
         closed: ['kbbbbbbbbbbbbk', 'kbbkkbbbbkkbbk'],
         happy: ['kbbkkbbbbkkbbk', 'kbkbbkbbkbbkbk'],
+        side: ['kbbkwbbbbkwbbk', 'kbbkwbbbbkwbbk'],
+        meh: ['kbbkkbbbbkkbbk', 'kbbwkbbbbwkbbk'],
       },
       mouth: {
         smile: ['kbpbbbkkbbbpbk', 'kbbbbbbbbbbbbk'],
         open: ['kbpbbkddkbbpbk', 'kbbbbkddkbbbbk'],
+        flat: ['kbpbbkkkkbbpbk', 'kbbbbbbbbbbbbk'],
+        o: ['kbpbbbkkbbbpbk', 'kbbbbbkkbbbbbk'],
       },
       belly: ['kdbbllllllbbdk', '.kdbbllllbbdk.', '..kkddddddkk..'],
       feet: { a: '...kk....kk...', b: '..kk......kk..', tuck: '....kk..kk....' },
@@ -49,6 +55,10 @@
     happy: { fps: 6, frames: [['happy', 'open', 'a'], ['happy', 'smile', 'b']] },
     sleep: { fps: 1, frames: [['closed', 'smile', 'a']] },
     held: { fps: 5, frames: [['open', 'open', 'tuck'], ['open', 'open', 'b']] },
+    sideeye: { fps: 1, frames: [['side', 'flat', 'a']] },
+    meh: { fps: 1, frames: [['meh', 'flat', 'a']] },
+    shock: { fps: 1, frames: [['open', 'o', 'tuck']] },
+    dance: { fps: 5, frames: [['happy', 'smile', 'a'], ['happy', 'open', 'b']] },
   };
 
   function rows(stage, clip, i = 0) {

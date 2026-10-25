@@ -17,6 +17,17 @@
   const model = {
     HOUR, DAY, WEEK, STAGES, NAMES,
     XP: { site: 5, cookie: 15, popup: 20, boop: 1, booped: 2 },
+    // Aura: earned by being iconic, lost by being undignified. Only these reasons are accepted.
+    AURA: { site: 2, cookie: 10, popup: 15, boop: 3, booped: 5, snack: 2, landing: 4, thrown: -3, poke_spam: -5, spat: -8 },
+    AURA_TIERS: [
+      { min: -Infinity, label: 'aura debt' },
+      { min: 0, label: 'NPC' },
+      { min: 50, label: 'side character' },
+      { min: 250, label: 'main character' },
+      { min: 1000, label: 'aura farmer' },
+      { min: 3000, label: 'final boss' },
+    ],
+    AURA_MIN: -100,
     FOOD: { cookie: 20, popup: 30, snack: 30 },
     HUNGER_PER_HOUR: 4,
     SNACK_COOLDOWN: 3 * HOUR,
@@ -47,6 +58,20 @@
       p.fullness = Math.min(100, model.fullness(p, now) + amount);
       p.fullnessAt = now;
     },
+    auraTier(p) {
+      const a = p?.aura || 0;
+      let t = model.AURA_TIERS[0];
+      for (const tier of model.AURA_TIERS) if (a >= tier.min) t = tier;
+      return t.label;
+    },
+    // Apply an aura reason to p; returns the change actually made.
+    addAura(p, reason) {
+      const d = model.AURA[reason];
+      if (!d) return 0;
+      const before = p.aura || 0;
+      p.aura = Math.max(model.AURA_MIN, before + d);
+      return p.aura - before;
+    },
     ageDays(p, now = Date.now()) {
       return Math.max(1, Math.ceil((now - (p.hatchedAt || p.born)) / DAY));
     },
@@ -66,6 +91,7 @@
         born: now,
         hatchedAt: 0,
         xp: 0,
+        aura: 0,
         fullness: 80,
         fullnessAt: now,
         snackAt: 0,

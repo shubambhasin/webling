@@ -10,7 +10,7 @@
     "icons": "node scripts/make-icons.mjs",
     "zip": "node scripts/zip.mjs",
     "test": "node --test --test-concurrency=1 'test/*.test.mjs' && npm --prefix server test",
-    "test:unit": "node --test 'test/shared.test.mjs' 'test/background.test.mjs' && npm --prefix server test",
+    "test:unit": "node --test 'test/shared.test.mjs' 'test/voice.test.mjs' 'test/background.test.mjs' && npm --prefix server test",
     "test:e2e": "node --test --test-concurrency=1 'test/*.e2e.test.mjs'"
   },
   "license": "MIT"
