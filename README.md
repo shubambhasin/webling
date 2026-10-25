@@ -101,6 +101,12 @@ Baby → Grown-up at 120 xp → Legend (with a crown) at 1500. Each pet's colour
 give a snack every 3 hours. A hungry pet is slower and says so. It never dies, because guilt makes
 people uninstall.
 
+**Getting out of the way.** The pet hides while anything is full screen (a full-screen element, or a
+playing video covering most of the window, which also catches F11 and players that fake full screen) and
+comes back after. Alt+Shift+W (changeable at chrome://extensions/shortcuts) or the popup puts it away
+everywhere until you bring it back; the popup can also keep it off one site. While hidden it eats nothing
+and says nothing.
+
 **Eating.** Only cosmetic: the element is clipped away behind the pet's mouth, then hidden with inline
 styles. Backdrops and scroll locks that came with a pop-up are undone too. Nothing is clicked, so a
 consent banner is left unanswered (sites treat that as no consent). A modal that appears within 3s of

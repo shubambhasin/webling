@@ -66,6 +66,7 @@ test('"nuke them" clears pop-up hell at once', { skip }, async () => {
   const p = await calmPage();
   try {
     assert.equal(await p.eval(`document.querySelectorAll('.snack-backdrop').length`), 0);
+    await p.until(`/nuked pop-up hell/.test(document.querySelector('#hello').textContent)`, 3000, 'owns up to the nuke');
   } finally {
     p.close();
   }

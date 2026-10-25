@@ -231,6 +231,7 @@
         "missed you (don't make it weird)"],
       unbothered: ['oh. you.'],
     },
+    unhide: { all: ["i'm back", 'did you miss me', 'ok where were we', 'surprise, still here'], dramatic: ['I HAVE RETURNED'] },
     copy: { all: ['ctrl c ctrl v speedrun', 'copying homework i see', 'plagiarism era (jk)'] },
     wiggle: { all: ['stop shaking the screen', "ok who's doing earthquakes", 'mouse is having a moment'] },
 

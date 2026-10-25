@@ -49,6 +49,37 @@
     });
     onSettings(state.settings);
     setInterval(tick, 60e3);
+
+    // Out of the way of full-screen things. Media events don't bubble, so listen in the capture phase.
+    addEventListener('fullscreenchange', updateShown);
+    for (const t of ['play', 'pause', 'ended']) addEventListener(t, updateShown, true);
+    addEventListener('resize', updateShown, { passive: true });
+    setInterval(updateShown, 2000);
+  }
+
+  // Whether the webling is on this page right now: not put away (shortcut or popup), not switched off for
+  // this site, and not in the way of anything full screen. Full screen means a full-screen element, or a
+  // playing video covering most of the window, which also catches F11 and players that fake full screen.
+  WL.shown = true;
+  function updateShown() {
+    const s = WL.state.settings;
+    const shown = !s.hidden && !(s.noPet || []).includes(host) && !document.fullscreenElement && !bigVideo();
+    if (shown !== WL.shown) {
+      WL.shown = shown;
+      WL.overlay.show(shown);
+    }
+    if (shown && s.eat && !s.noEat.includes(host)) WL.eater.start();
+    else WL.eater.stop();
+  }
+
+  function bigVideo() {
+    for (const v of document.querySelectorAll('video')) {
+      if (v.paused || v.ended) continue;
+      const r = v.getBoundingClientRect();
+      const w = Math.min(r.right, innerWidth) - Math.max(r.left, 0), h = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+      if (w > 0 && h > 0 && w * h > innerWidth * innerHeight * 0.8) return true;
+    }
+    return false;
   }
 
   function onPet(pet) {
@@ -76,9 +107,14 @@
   }
 
   function onSettings(s) {
+    const wasHidden = WL.state.settings?.hidden;
     WL.state.settings = s;
-    if (s.eat && !s.noEat.includes(host)) WL.eater.start();
-    else WL.eater.stop();
+    updateShown();
+    // Brought back with the shortcut: drop back in and say so.
+    if (wasHidden && !s.hidden && WL.shown) {
+      WL.me.spawn();
+      setTimeout(() => WL.brain.say('unhide'), 700);
+    }
     if (s.presence) WL.presence.start();
     else WL.presence.stop();
   }

@@ -44,6 +44,11 @@
       }).observe(document.documentElement, { childList: true });
     },
 
+    // Hide the whole layer (pet, bubbles, toasts) or bring it back.
+    show(on) {
+      ov.host.style.display = on ? '' : 'none';
+    },
+
     resize() {
       const d = (ov.dpr = Math.min(Math.max(1, Math.round(devicePixelRatio || 1)), 3));
       ov.canvas.width = innerWidth * d;

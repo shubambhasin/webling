@@ -12,7 +12,7 @@ const USED = ['ambient', 'poke', 'poke_annoyed', 'poke_done', 'held', 'thrown', 
   'hungry', 'fed', 'eat_start_cookie', 'eat_start_popup', 'ate_cookie', 'ate_popup', 'ate_accept_all', 'ate_discount',
   'ate_newsletter', 'spat', 'grew_adult', 'grew_legend', 'tier_up', 'arrive_new', 'arrive_again', 'arrive_regular',
   'time_late', 'time_morning', 'time_monday', 'time_friday', 'time_weekend', 'doomscroll', 'reading_long', 'tab_back',
-  'copy', 'wiggle', 'ghost_join', 'crowd', 'booped', 'boop_sent', 'ghost_hi',
+  'copy', 'wiggle', 'unhide', 'ghost_join', 'crowd', 'booped', 'boop_sent', 'ghost_hi',
   ...Object.keys(V.SITES).map((k) => `site_${k}`)];
 
 // Words that have no place in a pet's mouth.

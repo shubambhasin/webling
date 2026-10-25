@@ -3,7 +3,8 @@
 if (typeof importScripts === 'function') importScripts('shared/pet.js', 'shared/voice.js');
 
 const M = WL.model;
-const DEFAULT_SETTINGS = { presence: true, eat: true, noEat: [] };
+// hidden: the shortcut (or popup) put the pet away everywhere. noPet: sites where it never shows up.
+const DEFAULT_SETTINGS = { presence: true, eat: true, noEat: [], hidden: false, noPet: [] };
 const MAX_PASSPORT = 5000;
 const PAGE_AURA = new Set(['landing', 'thrown', 'poke_spam']);
 const NOTICED = new Set(['doomscroll']);
@@ -156,16 +157,25 @@ const handlers = {
   }),
 
   settings: ({ patch }) => mutate((s) => {
-    for (const k of ['presence', 'eat']) if (k in (patch || {})) s.settings[k] = !!patch[k];
+    for (const k of ['presence', 'eat', 'hidden']) if (k in (patch || {})) s.settings[k] = !!patch[k];
   }),
 
-  siteEat: ({ host, on }) => mutate((s) => {
-    const list = new Set(s.settings.noEat);
-    if (on) list.delete(host);
-    else list.add(host);
-    s.settings.noEat = [...list].slice(-500);
-  }),
+  // Per-site switches: eating on this site, and the pet on this site at all.
+  siteEat: ({ host, on }) => mutate((s) => siteList(s, 'noEat', host, on)),
+  sitePet: ({ host, on }) => mutate((s) => siteList(s, 'noPet', host, on)),
 };
+
+function siteList(s, key, host, on) {
+  const list = new Set(s.settings[key]);
+  if (on) list.delete(host);
+  else list.add(host);
+  s.settings[key] = [...list].slice(-500);
+}
+
+// The keyboard shortcut (Alt+Shift+W unless the user changed it): put the pet away, or bring it back.
+chrome.commands?.onCommand.addListener((command) => {
+  if (command === 'toggle-pet') mutate((s) => { s.settings.hidden = !s.settings.hidden; });
+});
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   const h = handlers[msg?.type];

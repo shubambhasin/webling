@@ -4,7 +4,7 @@ import { loadShared } from '../scripts/load-shared.mjs';
 
 // Run background.js against an in-memory chrome.* stand-in.
 function boot(extra = {}) {
-  const store = {}, listeners = [], installs = [], opened = [];
+  const store = {}, listeners = [], installs = [], opened = [], commands = [];
   const chrome = {
     storage: {
       local: {
@@ -14,10 +14,11 @@ function boot(extra = {}) {
     },
     runtime: { onMessage: { addListener: (f) => listeners.push(f) }, onInstalled: { addListener: (f) => installs.push(f) } },
     tabs: { create: (t) => opened.push(t.url) },
+    commands: { onCommand: { addListener: (f) => commands.push(f) } },
   };
   loadShared(['shared/pet.js', 'shared/voice.js', 'background.js'], { chrome, structuredClone, ...extra });
   const send = (msg) => new Promise((res) => listeners[0](msg, {}, res));
-  return { send, store, opened, install: () => installs[0]({ reason: 'install' }) };
+  return { send, store, opened, install: () => installs[0]({ reason: 'install' }), command: (c) => commands[0](c) };
 }
 
 test('install creates an egg and opens the welcome page', async () => {
@@ -177,4 +178,22 @@ test('weeks saved before Wrapped (no visits, kinds or aura) still roll and count
   await bg.send({ type: 'visit', host: 'reddit.com' });
   assert.equal(bg.store.pet.week.visits, 1);
   assert.equal(bg.store.pet.week.kinds.reddit, 1);
+});
+
+test('the shortcut puts the pet away and brings it back; pets can be switched off per site', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Shy' });
+  assert.equal((await bg.send({ type: 'state' })).settings.hidden, false);
+  bg.command('toggle-pet');
+  assert.equal((await bg.send({ type: 'state' })).settings.hidden, true);
+  bg.command('toggle-pet');
+  bg.command('something-else');
+  assert.equal((await bg.send({ type: 'state' })).settings.hidden, false);
+  assert.equal((await bg.send({ type: 'settings', patch: { hidden: 1 } })).settings.hidden, true, 'the popup switch too');
+  let s = await bg.send({ type: 'sitePet', host: 'docs.example.com', on: false });
+  assert.deepEqual([...s.settings.noPet], ['docs.example.com']);
+  s = await bg.send({ type: 'sitePet', host: 'docs.example.com', on: true });
+  assert.deepEqual([...s.settings.noPet], []);
+  assert.deepEqual([...s.settings.noEat], [], 'eating switches are separate');
 });

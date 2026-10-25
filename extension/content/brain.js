@@ -45,7 +45,7 @@
     // hasn't come up within `every` ms.
     remark(event, vars, { every = 0, chance = 1 } = {}) {
       const now = performance.now(), me = WL.me;
-      if (!me || me.mode === 'sleep' || me.mode === 'held' || me.busy) return null;
+      if (!me || !WL.shown || me.mode === 'sleep' || me.mode === 'held' || me.busy) return null;
       if (now - lastAmbient < AMBIENT_GAP_MS / brain.traits().chatty) return null;
       if (every && now - (cooldowns[event] ?? -Infinity) < every) return null;
       if (Math.random() > chance) return null;

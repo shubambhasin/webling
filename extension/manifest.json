@@ -21,6 +21,12 @@
     "service_worker": "background.js"
   },
   "permissions": ["storage"],
+  "commands": {
+    "toggle-pet": {
+      "suggested_key": { "default": "Alt+Shift+W" },
+      "description": "Hide or show your webling"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],

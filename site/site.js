@@ -86,7 +86,7 @@
     document.body.style.overflow = '';
   }
 
-  let hellStart = 0, hellTimer = null;
+  let hellStart = 0, hellTimer = null, nuked = false;
   function buryPage() {
     hellStart = performance.now();
     const order = [['cookie'], ['newsletter'], ['notify'], ['sale']];
@@ -100,12 +100,15 @@
         clearBackdrops();
         $('#hell-status').hidden = true;
         const secs = ((performance.now() - hellStart) / 1000).toFixed(1);
-        $('#hello').textContent = `${pet.name} cleared pop-up hell in ${secs}s. The internet could never.`;
+        $('#hello').textContent = nuked
+          ? `You nuked pop-up hell. ${pet.name} wanted to eat that. ${pet.name} is disappointed in you.`
+          : `${pet.name} cleared pop-up hell in ${secs}s. The internet could never.`;
       }
     }, 300);
   }
 
   function nuke() {
+    nuked = true;
     document.querySelectorAll('[data-snack]').forEach((s) => s.remove());
     clearBackdrops();
   }

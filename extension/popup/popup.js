@@ -111,6 +111,10 @@
       <button class="wrapped-btn" id="wrapped-btn">📼 ${p.lastWeek ? 'Last week, wrapped' : 'This week so far, wrapped'}
         ${p.lastWeek && !p.lastWeek.seen ? '<i>new</i>' : ''}<span>→</span></button>
       <div class="settings">
+        <label class="check"><input type="checkbox" id="hidden" ${state.settings.hidden ? 'checked' : ''}>
+          <span>Put ${esc(p.name)} away for now<small>Everywhere, until you bring it back. Shortcut: <b id="shortcut">Alt+Shift+W</b></small></span></label>
+        ${host ? `<label class="check"><input type="checkbox" id="pet-here" ${(state.settings.noPet || []).includes(host) ? '' : 'checked'}>
+          <span>Show up on ${esc(host)}</span></label>` : ''}
         <label class="check"><input type="checkbox" id="eat" ${state.settings.eat ? 'checked' : ''}><span>Eat cookie banners and pop-ups</span></label>
         ${host ? `<label class="check"><input type="checkbox" id="eat-here" ${state.settings.noEat.includes(host) ? '' : 'checked'} ${state.settings.eat ? '' : 'disabled'}>
           <span>…on ${esc(host)}</span></label>` : ''}
@@ -138,6 +142,14 @@
     $('#presence').onchange = async (e) => (state = await send({ type: 'settings', patch: { presence: e.target.checked } }));
     const here = $('#eat-here');
     if (here) here.onchange = async (e) => (state = await send({ type: 'siteEat', host, on: e.target.checked }));
+    $('#hidden').onchange = async (e) => (state = await send({ type: 'settings', patch: { hidden: e.target.checked } }));
+    const petHere = $('#pet-here');
+    if (petHere) petHere.onchange = async (e) => (state = await send({ type: 'sitePet', host, on: e.target.checked }));
+    // the shortcut as the user has it (they can change it at chrome://extensions/shortcuts)
+    chrome.commands?.getAll((commands) => {
+      const key = commands.find((c) => c.name === 'toggle-pet')?.shortcut;
+      $('#shortcut').textContent = key || 'not set (chrome://extensions/shortcuts)';
+    });
   }
 
   const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
