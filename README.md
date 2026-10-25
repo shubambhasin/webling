@@ -135,6 +135,13 @@ parameter is optional, so `/r/linkedin.com` works on its own. People who open th
 site from there. `vercel.json` rewrites `/r/*` to the functions in `api/`; the local dev server runs the
 same handlers, so `npm run build:site && node scripts/dev-server.mjs public` serves them too.
 
+**Focus buddy.** "Focus with Mochi" in the popup starts a 25 or 50 minute session (`pet.focus`). On every
+page the pet then sits and keeps watch: no wandering, no unprompted remarks, a small timer top-right. Open a
+distracting kind of site (social, Reddit, LinkedIn, video, games, shopping, dating) and it calls you out, once
+per site per session. When the time is up, whichever tab or popup notices ends the session (only the first
+gets it): +20 aura, +10 xp, a celebration, and it counts toward Wrapped, where five in a week earns "locked in".
+Ending early just stops it. No alarms permission needed: sessions finish when something next looks.
+
 **Webling Wrapped.** The popup's "Last week, wrapped" (or "This week so far" in a pet's first week) gives a
 verdict on the week, a roast of it in the pet's vibe, and the numbers: pop-ups eaten, new sites, pages,
 pages after midnight, doomscrolls, yeets, aura gained and the kind of site that defined the week. The

@@ -147,6 +147,40 @@ const handlers = {
     });
   },
 
+  // Focus sessions. pet.focus is { start, end, mins, slips: [hosts] } while one runs. Ending it on or after its
+  // end time finishes it (aura, xp, counted for Wrapped); ending it sooner just stops it. Whichever tab or
+  // popup notices the time is up ends it; the rest see focus go back to null.
+  focusStart: ({ mins }) => mutate((s) => {
+    if (!s.pet.hatched || !M.FOCUS_MINS.includes(mins)) return { ok: false, ...view(s) };
+    const now = Date.now();
+    if (!s.pet.focus || s.pet.focus.end <= now) s.pet.focus = { start: now, end: now + mins * 60e3, mins, slips: [] };
+    return { ok: true, ...view(s) };
+  }),
+
+  focusEnd: () => mutate((s) => {
+    const f = s.pet.focus;
+    if (!f) return { ok: false, ...view(s) };
+    s.pet.focus = null;
+    const done = Date.now() >= f.end - 1000;
+    if (done) {
+      s.pet.xp += M.FOCUS_XP;
+      M.addAura(s.pet, 'focus');
+      bump(s.pet.stats, 'focus');
+      bump(s.pet.week, 'focus');
+    }
+    return { ok: true, done, mins: f.mins, slips: f.slips.length, ...view(s) };
+  }),
+
+  // A distracting site opened during a session: counted once per site.
+  focusSlip: ({ host }) => mutate((s) => {
+    const f = s.pet.focus;
+    host = String(host || '').toLowerCase().replace(/^www\./, '');
+    if (!f || Date.now() >= f.end || !WL.voice.distracting(host) || f.slips.includes(host)) return { ok: false };
+    f.slips.push(host);
+    bump(s.pet.week, 'slips');
+    return { ok: true, count: f.slips.length };
+  }),
+
   snack: () => mutate((s) => {
     const wait = s.pet.snackAt + M.SNACK_COOLDOWN - Date.now();
     if (wait > 0) return { ok: false, wait, ...view(s) };

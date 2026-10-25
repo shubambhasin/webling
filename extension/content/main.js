@@ -48,6 +48,7 @@
       }, 1800);
     });
     onSettings(state.settings);
+    WL.focus.sync(state.pet);
     setInterval(tick, 60e3);
 
     // Out of the way of full-screen things. Media events don't bubble, so listen in the capture phase.
@@ -104,6 +105,7 @@
       WL.me.happy(1.5);
     }
     if (after.name !== before.name || after.stage !== before.stage) WL.presence.updateLook();
+    if (pet.focus?.start !== old.focus?.start || !pet.focus) WL.focus.sync(pet);
   }
 
   function onSettings(s) {

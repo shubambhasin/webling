@@ -127,6 +127,13 @@
     }
 
     decide() {
+      // Keeping watch during a focus session: sit still, the odd side-eye, no naps.
+      if (!this.ghost && WL.focus?.on) {
+        if (Math.random() < 0.15) return this.strike('sideeye', 1.5);
+        this.mode = 'idle';
+        this.think = 2 + Math.random() * 3;
+        return;
+      }
       if (!this.ghost && performance.now() - WL.input.lastMove > 45e3) {
         this.mode = 'sleep';
         this.emit('sleep');

@@ -162,6 +162,12 @@ input[type=text] {
 .settings .check { margin-bottom: 8px; }
 .week { font-size: 11px; margin: 10px 0 0; }
 
+.focus-row { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; padding: 6px 8px; border: 2px solid var(--line); }
+.focus-row span { flex: 1; font-size: 12px; }
+.focus-row button { padding: 3px 8px; font-size: 12px; }
+.focus-row.on { background: var(--ink); color: var(--paper); }
+.focus-row.on button { background: var(--paper); color: var(--ink); }
+
 .wrapped-btn {
   display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 10px; text-align: left;
   background: var(--ink); color: var(--paper); box-shadow: 2px 2px 0 var(--accent);

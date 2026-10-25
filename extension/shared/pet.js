@@ -12,18 +12,23 @@
   const NAMES = ['Mochi', 'Pixel', 'Bean', 'Noodle', 'Tofu', 'Biscuit', 'Mango', 'Gizmo', 'Nugget', 'Boba',
     'Waffle', 'Sprout', 'Kiwi', 'Dot', 'Byte', 'Momo', 'Taco', 'Ziggy', 'Pudding', 'Crumb'];
 
-  // A week of stats, for the popup and Webling Wrapped. visits counts every page; sites only new ones; late is
+  // A week of stats, for the popup and Webling Wrapped. focus is finished focus sessions, slips the distracting
+  // sites opened during them. visits counts every page; sites only new ones; late is
   // pages opened between midnight and 5am; kinds counts visits per kind of site (voice.js SITES). Aura gained
   // is aura at the end minus auraStart. Saves from before Wrapped lack the newer fields; read them as 0.
   const emptyWeek = (now, aura = 0) => ({
-    start: now, cookies: 0, popups: 0, sites: 0, boops: 0, visits: 0, late: 0, doomscrolls: 0, yeets: 0, kinds: {}, auraStart: aura,
+    start: now, cookies: 0, popups: 0, sites: 0, boops: 0, visits: 0, late: 0, doomscrolls: 0, yeets: 0, focus: 0, slips: 0,
+    kinds: {}, auraStart: aura,
   });
 
   const model = {
     HOUR, DAY, WEEK, STAGES, NAMES,
     XP: { site: 5, cookie: 15, popup: 20, boop: 1, booped: 2 },
     // Aura: earned by being iconic, lost by being undignified. Only these reasons are accepted.
-    AURA: { site: 2, cookie: 10, popup: 15, boop: 3, booped: 5, snack: 2, landing: 4, thrown: -3, poke_spam: -5, spat: -8 },
+    AURA: { site: 2, cookie: 10, popup: 15, boop: 3, booped: 5, snack: 2, landing: 4, focus: 20, thrown: -3, poke_spam: -5, spat: -8 },
+    // Focus sessions: lengths on offer, in minutes, and the xp a finished one earns.
+    FOCUS_MINS: [25, 50],
+    FOCUS_XP: 10,
     AURA_TIERS: [
       { min: -Infinity, label: 'aura debt' },
       { min: 0, label: 'NPC' },

@@ -197,3 +197,32 @@ test('the shortcut puts the pet away and brings it back; pets can be switched of
   assert.deepEqual([...s.settings.noPet], []);
   assert.deepEqual([...s.settings.noEat], [], 'eating switches are separate');
 });
+
+test('focus sessions: start, slips once per distracting site, quit early or finish for aura', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Monk' });
+  assert.equal((await bg.send({ type: 'focusStart', mins: 7 })).ok, false, 'only the offered lengths');
+  let s = await bg.send({ type: 'focusStart', mins: 25 });
+  assert.equal(s.pet.focus.mins, 25);
+  assert.equal((await bg.send({ type: 'focusSlip', host: 'www.youtube.com' })).count, 1);
+  assert.equal((await bg.send({ type: 'focusSlip', host: 'youtube.com' })).ok, false, 'once per site');
+  assert.equal((await bg.send({ type: 'focusSlip', host: 'docs.python.org' })).ok, false, 'work sites are fine');
+  assert.equal((await bg.send({ type: 'focusSlip', host: 'reddit.com' })).count, 2);
+
+  s = await bg.send({ type: 'focusEnd' });
+  assert.equal(s.done, false, 'quit early');
+  assert.equal(s.pet.focus, null);
+  assert.equal(s.pet.stats.focus, undefined);
+
+  await bg.send({ type: 'focusStart', mins: 50 });
+  bg.store.pet.focus.end = Date.now() - 10;
+  const aura = bg.store.pet.aura;
+  s = await bg.send({ type: 'focusEnd' });
+  assert.equal(s.done, true);
+  assert.equal(s.pet.aura - aura, 20);
+  assert.equal(s.pet.stats.focus, 1);
+  assert.equal(s.pet.week.focus, 1);
+  assert.equal(s.pet.week.slips, 2);
+  assert.equal((await bg.send({ type: 'focusEnd' })).ok, false, 'only one tab gets to finish it');
+});

@@ -131,6 +131,7 @@
     const q = new URLSearchParams({
       n: pet.name, s: pet.seed, g: WL.model.stage(pet), v: WL.voice.vibeOf(pet), t: r.t, d: day(r.start), e: day(r.end),
       c: w.cookies || 0, p: w.popups || 0, x: w.sites || 0, vi: w.visits || 0, l: w.late || 0, ds: w.doomscrolls || 0, y: w.yeets || 0,
+      f: w.focus || 0, sl: w.slips || 0,
     });
     if (r.aura !== null) q.set('a', r.aura);
     if (r.top) q.set('k', `${r.top.kind}.${w.kinds[r.top.kind]}`);

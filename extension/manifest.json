@@ -43,6 +43,7 @@
         "content/actor.js",
         "content/eater.js",
         "content/presence.js",
+        "content/focus.js",
         "content/main.js"
       ]
     }

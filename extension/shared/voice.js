@@ -231,6 +231,23 @@
         "missed you (don't make it weird)"],
       unbothered: ['oh. you.'],
     },
+    // ---- focus sessions ----
+    focus_start: {
+      all: ["locked in. i'll guard the tabs", "focus mode. i'm watching 👀", 'ok go. no distractions', 'deep work era starts now'],
+      dramatic: ['i shall guard you with my life'], wholesome: ["you got this! i'll keep watch"],
+      chaotic: ['focus? me? ok fine'], unbothered: ["fine. focus. i'll be here"], online: ['logging off (you, not me)'],
+    },
+    focus_slip: {
+      all: ['{host}? we said focus bestie', 'caught you. {host}, really?', 'i saw that. close {host}',
+        'this is not focusing', 'the timer is still going btw'],
+      dramatic: ['betrayal. on {host} of all places'], wholesome: ['little break? then back to it 🫶'],
+      unbothered: ['{host}. sure. not my timer'],
+    },
+    focus_done: {
+      all: ['focus done. we ate that', '{mins} minutes locked in. iconic', 'done! go stretch', 'academic weapon behavior'],
+      dramatic: ['we did it. we actually did it'], wholesome: ['so proud of you 🥹 go rest'],
+    },
+    focus_quit: { all: ["ending early? i'll allow it", 'ok. we tried', 'the timer understood. i did not'], unbothered: ['cool.'] },
     unhide: { all: ["i'm back", 'did you miss me', 'ok where were we', 'surprise, still here'], dramatic: ['I HAVE RETURNED'] },
     copy: { all: ['ctrl c ctrl v speedrun', 'copying homework i see', 'plagiarism era (jk)'] },
     wiggle: { all: ['stop shaking the screen', "ok who's doing earthquakes", 'mouse is having a moment'] },
@@ -246,6 +263,10 @@
     wrapped_touch_grass: {
       all: ['only {n} pages all week? who are you', "you touched grass. i'm so proud", 'quiet week. i got bored'],
       online: ['{n} pages? are you okay? blink twice'],
+    },
+    wrapped_locked_in: {
+      all: ['{n} focus sessions. locked in fr', '{n} times you chose focus. who are you', 'productivity arc unlocked'],
+      chaotic: ['{n} focus sessions?? are you ok'],
     },
     wrapped_night_owl: {
       all: ['{n} visits after midnight. go to bed', 'the moon is tired of seeing you', 'sleep schedule? never heard of her'],
@@ -284,13 +305,15 @@
 
   // Wrapped verdicts, by id. Site kinds that can define a week, and the verdict each gives.
   const VERDICTS = {
-    touch_grass: 'offline icon', night_owl: '3am menace', doomscroller: 'doomscroll champion',
+    touch_grass: 'offline icon', locked_in: 'locked in', night_owl: '3am menace', doomscroller: 'doomscroll champion',
     pop_up_predator: 'pop-up predator', add_to_cart: 'add-to-cart era', chronically_online: 'chronically online',
     thought_leader: 'thought leader', corporate: 'corporate baddie', dev_mode: 'merge conflict era',
     one_more_episode: 'one more episode', academic_weapon: 'academic weapon', prompt_goblin: 'prompt goblin',
     news_junkie: 'news junkie', gamer: 'gamer era', always_hungry: 'always hungry', wanderlust: 'wanderlust era',
     rizz: 'rizz researcher', stonks: 'stonks enjoyer', explorer: 'internet explorer', lowkey: 'lowkey normal',
   };
+  // Kinds of site that count as a slip during a focus session.
+  const DISTRACTING = new Set(['social', 'reddit', 'linkedin', 'video', 'games', 'shopping', 'dating']);
   const KIND_VERDICT = {
     shopping: 'add_to_cart', social: 'chronically_online', reddit: 'chronically_online', linkedin: 'thought_leader',
     work: 'corporate', mail: 'corporate', dev: 'dev_mode', video: 'one_more_episode', music: 'one_more_episode',
@@ -398,6 +421,12 @@
 
     VERDICTS,
 
+    // The kind of site, if it's one that breaks focus (social, video, shopping…); otherwise null.
+    distracting(host) {
+      const kind = voice.siteKind(host);
+      return DISTRACTING.has(kind) ? kind : null;
+    },
+
     // Webling Wrapped: the verdict on a week (from pet.week / pet.lastWeek), and a roast of it in this vibe.
     // t picks the line like roast() does. n is the number the verdict is about.
     wrapped(w, vibe, t = 0) {
@@ -407,6 +436,7 @@
       const top = kinds.length && visits ? { kind: kinds[0][0], share: Math.min(100, Math.round((kinds[0][1] / visits) * 100)) } : null;
       const [verdict, n] =
         visits < 15 ? ['touch_grass', visits]
+          : num('focus') >= 5 ? ['locked_in', num('focus')]
           : num('late') >= 10 ? ['night_owl', num('late')]
             : num('doomscrolls') >= 5 ? ['doomscroller', num('doomscrolls')]
               : eaten >= 30 ? ['pop_up_predator', eaten]

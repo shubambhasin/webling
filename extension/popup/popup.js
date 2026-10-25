@@ -8,7 +8,7 @@
 
   if (new URLSearchParams(location.search).has('welcome')) document.body.classList.add('page');
 
-  let state = null, host = '', stage = null;
+  let state = null, host = '', stage = null, focusTimer = null;
 
   (async () => {
     [state] = await Promise.all([send({ type: 'state' }), findHost()]);
@@ -25,6 +25,7 @@
 
   function render() {
     stage?.stop();
+    clearInterval(focusTimer);
     if (state.pet.hatched) home();
     else hatchView();
   }
@@ -78,6 +79,11 @@
     const snackWait = p.snackAt + M.SNACK_COOLDOWN - now;
     const w = p.week;
     const vibeId = WL.voice.vibeOf(p), vibe = WL.voice.VIBES[vibeId];
+    const f = p.focus;
+    const focusRow = f && f.end > now
+      ? `<div class="focus-row on"><span>🎯 Focus: <b id="focus-left">${clock(f.end - now)}</b> left${f.slips.length ? ` · ${n(f.slips.length, 'slip')}` : ''}</span>
+          <button id="focus-stop">End early</button></div>`
+      : `<div class="focus-row"><span>🎯 Focus with ${esc(p.name)}</span>${M.FOCUS_MINS.map((m) => `<button data-focus="${m}">${m} min</button>`).join('')}</div>`;
     app.innerHTML = `
       <header><b>webling</b><span class="pill">${info.label}</span></header>
       <canvas class="stage" aria-label="${esc(p.name)}, click to poke"></canvas>
@@ -90,6 +96,7 @@
         <span class="tag">${esc(vibe.label)}</span><span class="blurb">${esc(vibe.blurb)}</span>
       </div>
       <div class="aura-row"><b>✦ ${(p.aura || 0).toLocaleString()} aura</b><span>${esc(M.auraTier(p))}</span></div>
+      ${focusRow}
       <div class="bar">
         <label>Growth <span>${prog.next ? `${p.xp - prog.cur.min} / ${prog.next.min - prog.cur.min} xp to ${prog.next.label.toLowerCase()}` : `${p.xp} xp, fully grown`}</span></label>
         <div class="track"><i style="width:${Math.round(prog.frac * 100)}%"></i></div>
@@ -102,7 +109,7 @@
         <div><b>${p.stats.cookies}</b><span>cookie banners eaten</span></div>
         <div><b>${p.stats.popups}</b><span>pop-ups eaten</span></div>
         <div><b>${state.sites}</b><span>sites explored</span></div>
-        <div><b>${p.stats.boops}</b><span>weblings booped</span></div>
+        <div><b>${p.stats.focus || 0}</b><span>focus sessions</span></div>
       </div>
       <div class="actions">
         <button id="snack" ${snackWait > 0 ? 'disabled' : ''}>${snackWait > 0 ? `Snack in ${fmtWait(snackWait)}` : 'Give a snack'}</button>
@@ -138,6 +145,24 @@
     };
     $('#share-btn').onclick = openShare;
     $('#wrapped-btn').onclick = wrapped;
+    for (const b of app.querySelectorAll('[data-focus]')) {
+      b.onclick = async () => {
+        state = await send({ type: 'focusStart', mins: Number(b.dataset.focus) });
+        render();
+        speak('focus_start');
+      };
+    }
+    if (f) {
+      if (f.end <= now) endFocus();
+      else {
+        $('#focus-stop').onclick = endFocus;
+        focusTimer = setInterval(() => {
+          const left = f.end - Date.now();
+          if (left <= 0) endFocus();
+          else $('#focus-left').textContent = clock(left);
+        }, 1000);
+      }
+    }
     $('#eat').onchange = async (e) => { state = await send({ type: 'settings', patch: { eat: e.target.checked } }); render(); };
     $('#presence').onchange = async (e) => (state = await send({ type: 'settings', patch: { presence: e.target.checked } }));
     const here = $('#eat-here');
@@ -151,6 +176,22 @@
       $('#shortcut').textContent = key || 'not set (chrome://extensions/shortcuts)';
     });
   }
+
+  // End the session: finished if its time is up (whoever ends it first gets the celebration), quit otherwise.
+  async function endFocus() {
+    clearInterval(focusTimer);
+    const r = await send({ type: 'focusEnd' });
+    if (!r?.ok) return;
+    state = r;
+    render();
+    speak(r.done ? 'focus_done' : 'focus_quit', { mins: r.mins });
+    if (r.done) stage.celebrate();
+  }
+
+  const clock = (ms) => {
+    const secs = Math.ceil(ms / 1000);
+    return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  };
 
   const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
@@ -176,6 +217,7 @@
       [r.eaten, 'pop-ups & banners eaten'], [w.sites || 0, 'new sites'], [w.visits || 0, 'pages visited'],
       [w.late || 0, 'after midnight'], [w.doomscrolls || 0, 'doomscrolls'], [w.yeets || 0, 'times yeeted'],
     ];
+    if (w.focus) tiles.push([w.focus, `focus session${w.focus === 1 ? '' : 's'}${w.slips ? ` · ${w.slips} slipped` : ''}`]);
     if (r.aura !== null) tiles.push([`${r.aura >= 0 ? '+' : ''}${r.aura}`, 'aura']);
     if (r.top) tiles.push([`${r.top.share}%`, r.top.kind]);
     const link = WL.card.wrappedLink(p, r);

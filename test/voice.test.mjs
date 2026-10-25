@@ -179,3 +179,11 @@ test('Wrapped: each kind of week gets its verdict, and the take is stable', () =
     for (const vibe of V.VIBE_IDS) assert.ok(V.pool(`wrapped_${id}`, vibe).length, `wrapped_${id} ${vibe}`);
   }
 });
+
+test('focus: distracting sites, and a locked-in week', () => {
+  assert.equal(V.distracting('www.youtube.com'), 'video');
+  assert.equal(V.distracting('m.reddit.com'), 'reddit');
+  assert.equal(V.distracting('github.com'), null);
+  assert.equal(V.distracting('my-blog.dev'), null);
+  assert.equal(V.wrapped({ visits: 100, focus: 6, late: 20 }, 'chaotic').verdict, 'locked_in', 'focus beats late nights');
+});

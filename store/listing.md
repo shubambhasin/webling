@@ -39,6 +39,9 @@ Unbothered, Chaotic, Dramatic, Wholesome or Chronically online. Each vibe talks,
 🌱 IT GROWS UP AND FARMS AURA
 Every meal and every new site helps it grow from baby to grown-up to legend (with a crown). Being iconic earns aura; getting yeeted across the screen costs it. Climb from NPC to main character to final boss.
 
+🎯 FOCUS BUDDY
+Start a 25 or 50 minute focus session from the popup. Your webling sits and keeps watch, stays quiet, and calls you out if you sneak off to YouTube, Reddit or a shopping cart ("youtube.com? we said focus bestie"). Finish and it celebrates.
+
 🫶 A PET THAT WON'T GUILT-TRIP YOU
 It gets hungry, you can give it snacks, and it falls asleep if you leave it alone. It never dies. Poke it, pick it up, throw it.
 

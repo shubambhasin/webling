@@ -17,6 +17,7 @@
     .chip, .toast { position: fixed; pointer-events: auto; background: #1b1528; color: #fffdf5; border: 2px solid #1b1528;
       box-shadow: 2px 2px 0 rgba(0,0,0,.25); padding: 5px 9px; display: flex; gap: 8px; align-items: center; }
     .chip { right: 12px; bottom: 12px; opacity: .92; cursor: default; }
+    .chip.focus { bottom: auto; top: 12px; pointer-events: none; padding: 3px 8px; font-size: 11px; opacity: .85; }
     .chip i { width: 7px; height: 7px; background: #7dff9b; display: inline-block; }
     .toast { left: 12px; bottom: 12px; transform: translateY(12px); opacity: 0; transition: .18s; }
     .toast.on { transform: none; opacity: 1; }
@@ -87,6 +88,13 @@
       t.onpointerenter = () => clearTimeout(ov.toastTimer);
       t.onpointerleave = hide;
       hide();
+    },
+
+    // The focus timer, small, top-right, never in the way of clicks. null removes it.
+    focusChip(text) {
+      ov.focusEl ||= ov.el('div', 'chip focus');
+      ov.focusEl.hidden = !text;
+      ov.focusEl.textContent = text || '';
     },
 
     // "N weblings here" in the bottom-right corner.
