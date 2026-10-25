@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webling test page</title>
+  <meta name="description" content="A page with a cookie banner and a pop-up, for trying the Webling extension.">
+  <meta name="theme-color" content="#0d0a17">
+  <link rel="icon" href="/ext/icons/32.png">
+  <link rel="stylesheet" href="/site.css">
+  <script src="/theme.js"></script>
+  <style>
+    /* the snacks, kept plain so they look like any site's */
+    .try-cookie { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2147483645; display: flex; gap: 14px; align-items: center;
+      background: #2e3a4d; color: #fff; padding: 16px 22px; font: 15px/1.4 system-ui, sans-serif; }
+    .try-cookie p { margin: 0; flex: 1; }
+    .try-cookie button, .try-modal button { padding: 8px 14px; border: 0; font-weight: 700; cursor: pointer; }
+    .try-backdrop { position: fixed; inset: 0; z-index: 9998; background: rgba(0, 0, 0, .5); }
+    .try-modal { position: fixed; z-index: 9999; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, 90vw);
+      background: #fff6e8; color: #222; padding: 26px; text-align: center; font: 16px/1.4 system-ui, sans-serif; }
+    .try-modal h3 { margin: 0 0 6px; font-size: 24px; color: #c0392b; }
+    .try-modal input { width: 60%; padding: 8px; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/" aria-label="Webling home"><canvas class="wordmark" data-text="WEBLING" data-cell="3" aria-hidden="true"></canvas></a>
+    <nav aria-label="Site"><div class="theme-switch" role="group" aria-label="Theme"></div><a class="btn small" href="/#get">Get it</a></nav>
+  </header>
+
+  <main class="doc">
+    <h1>Test page</h1>
+    <p class="fine">For trying an installed Webling. This page has no pet of its own.</p>
+
+    <p><strong>Within a few seconds:</strong> your webling drops in, lands on these lines of text, and eats the cookie
+      banner at the bottom. A newsletter pop-up shows up about five seconds later; it eats that too. After each
+      meal, <strong>Spit it out</strong> (bottom left) puts it back.</p>
+    <p><button class="btn small" id="again" type="button">Bring the pop-ups back</button></p>
+
+    <h2>Things to try</h2>
+    <ul>
+      <li>Click the pet to poke it. Poke it ten times and see what happens.</li>
+      <li>Drag it and throw it. It has opinions about that.</li>
+      <li>Press <strong>Alt+Shift+W</strong> to put it away, and again to bring it back.</li>
+      <li>Open the toolbar popup: start a 25 minute focus session, look at this week's Wrapped, switch eating off
+        for this site.</li>
+      <li>Scroll fast for a while. It notices doomscrolling.</li>
+    </ul>
+
+    <h2>Some words to walk on</h2>
+    <p>Octopuses have three hearts. A group of flamingos is a flamboyance. Honey found in ancient tombs is still
+      edible. Bananas are berries; strawberries are not.</p>
+    <p>Wombats make cube-shaped droppings. Sea otters hold hands while they sleep. Scotland's national animal is
+      the unicorn. A day on Venus is longer than a year on Venus.</p>
+    <p>There are more possible games of chess than atoms in the observable universe. Sloths can hold their breath
+      longer than dolphins.</p>
+  </main>
+
+  <script src="/wordmark.js"></script>
+  <script>
+    function cookieBanner() {
+      const b = document.createElement('div');
+      b.className = 'try-cookie';
+      b.setAttribute('role', 'region');
+      b.setAttribute('aria-label', 'Cookie banner');
+      b.innerHTML = '<p><b>We value your privacy.</b> We and our 437 partners use cookies to personalise ads. Read our cookie policy.</p><button>Accept all</button><button>Reject all</button>';
+      document.body.appendChild(b);
+    }
+    function newsletter() {
+      const back = document.createElement('div');
+      back.className = 'try-backdrop';
+      const m = document.createElement('div');
+      m.className = 'try-modal';
+      m.setAttribute('role', 'dialog');
+      m.innerHTML = '<h3>Wait! Don\'t go!</h3><p>Subscribe to our newsletter and get 15% off your first order.</p><input placeholder="you@email.com" aria-label="Email"> <button>Subscribe</button>';
+      document.body.append(back, m);
+      document.body.style.overflow = 'hidden';
+    }
+    cookieBanner();
+    setTimeout(newsletter, 5000);
+    // A pop-up right after a click looks like one you asked for, and weblings leave those alone, so wait.
+    document.getElementById('again').onclick = () => {
+      document.querySelectorAll('.try-cookie, .try-modal, .try-backdrop').forEach((e) => e.remove());
+      document.body.style.overflow = '';
+      cookieBanner();
+      setTimeout(newsletter, 5000);
+    };
+  </script>
+</body>
+</html>

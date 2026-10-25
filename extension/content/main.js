@@ -1,7 +1,10 @@
 // Starts everything on a page: loads the pet, runs the animation loop and reacts to saved changes.
 (() => {
   const WL = globalThis.WL;
-  if (window.top !== window || WL.booted) return;
+  // Not in frames, not twice, and not on pages that bring their own pet (the landing page's demo, which runs
+  // these same scripts itself, with the dev stand-in for chrome.*; the installed extension can't see that).
+  const demoPage = document.querySelector('meta[name="webling-demo"]') && !globalThis.devInstall;
+  if (window.top !== window || WL.booted || demoPage) return;
   WL.booted = true;
 
   // lastInteract starts at -Infinity ("never"); 0 would read as a click when the page loaded.

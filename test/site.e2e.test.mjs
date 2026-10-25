@@ -258,8 +258,56 @@ test('a returning visitor keeps their pet', { skip }, async () => {
   }
 });
 
+test('the test page: an installed webling eats its banner and its pop-up', { skip }, async () => {
+  const p = await chrome.open(`${base}/try.html`);
+  try {
+    // play the installed extension: the same scripts the manifest lists
+    await p.eval(`(async () => {
+      const load = (src) => new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = fail; document.body.append(s); });
+      await load('/ext/chrome-shim.js');
+      for (const f of ['shared/config.js', 'shared/sprite.js', 'shared/pet.js', 'shared/voice.js', 'background.js']) await load('/ext/' + f);
+      await devInstall();
+      await chrome.runtime.sendMessage({ type: 'hatch', name: 'Tester' });
+      const m = await (await fetch('/ext/manifest.json')).json();
+      for (const f of m.content_scripts[0].js) if (!f.startsWith('shared/')) await load('/ext/' + f);
+      return true;
+    })()`);
+    await p.until(`globalThis.WL?.me && 1`, 10000, 'pet on the test page');
+    await p.until(`getComputedStyle(document.querySelector('.try-cookie')).display === 'none'`, 20000, 'banner eaten');
+    await p.until(`document.querySelector('.try-modal') && getComputedStyle(document.querySelector('.try-modal')).display === 'none'`, 30000, 'pop-up eaten');
+    assert.deepEqual(p.errors, []);
+  } finally {
+    p.close();
+  }
+});
+
+test('an installed webling stays off pages that bring their own pet (the landing page)', { skip }, async () => {
+  const p = await chrome.open(`${base}/try.html`);
+  try {
+    // mark this page the way the landing page is marked, then run the extension the way it's installed:
+    // in its own world, so the page's dev stand-in (devInstall) isn't visible to it
+    await p.eval(`(async () => {
+      document.head.insertAdjacentHTML('beforeend', '<meta name="webling-demo" content="1">');
+      const load = (src) => new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = fail; document.body.append(s); });
+      await load('/ext/chrome-shim.js');
+      for (const f of ['shared/config.js', 'shared/sprite.js', 'shared/pet.js', 'shared/voice.js', 'background.js']) await load('/ext/' + f);
+      await devInstall();
+      await chrome.runtime.sendMessage({ type: 'hatch', name: 'Shy' });
+      delete globalThis.devInstall;
+      const m = await (await fetch('/ext/manifest.json')).json();
+      for (const f of m.content_scripts[0].js) if (!f.startsWith('shared/')) await load('/ext/' + f);
+      return true;
+    })()`);
+    await sleep(1500);
+    assert.equal(await p.eval(`document.querySelectorAll('webling-root').length`), 0, 'no second pet');
+    assert.equal(await p.eval('!!globalThis.WL.me'), false);
+  } finally {
+    p.close();
+  }
+});
+
 test('the download, preview image and privacy policy are served', { skip }, async () => {
-  for (const [path, type] of [['/webling-extension.zip', 'application/zip'], ['/og.png', 'image/png'], ['/privacy.html', 'text/html'], ['/r/lol', 'text/html']]) {
+  for (const [path, type] of [['/webling-extension.zip', 'application/zip'], ['/og.png', 'image/png'], ['/privacy.html', 'text/html'], ['/try.html', 'text/html'], ['/r/lol', 'text/html']]) {
     const r = await fetch(base + path);
     assert.equal(r.status, path === '/r/lol' ? 404 : 200, path);
     assert.ok(r.headers.get('content-type').startsWith(type), `${path}: ${r.headers.get('content-type')}`);

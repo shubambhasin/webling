@@ -92,11 +92,19 @@ Webling is a virtual pet that lives on the web pages you visit. It walks on the 
 **Are you using remote code?** No, I am not using remote code.
 (Every script is in the package; there is no `eval`, no remote script tags, and no WebAssembly.)
 
-**Data usage: what user data do you plan to collect?** Tick nothing. With presence off, the extension
-makes no network requests at all; everything it keeps stays in `chrome.storage.local`. (The store counts
-data as collected only when it leaves the device.) The one thing that can leave is a Webling Wrapped link,
-and only when the user copies or opens it themselves: it carries the week's counts and the pet's name and
-colours, no sites. That's user-initiated sharing of content they chose, which the privacy policy explains.
+**Data usage: what user data do you plan to collect?** Google wants data the extension *handles* disclosed,
+"even when data is processed or stored locally" ([user data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)).
+Nothing leaves the device (presence is off), but on the device Webling handles three kinds. Tick:
+
+- [x] **Web history**: it keeps the hostnames of sites visited (for "sites explored" and greeting sites it
+  knows) and weekly counts per kind of site.
+- [x] **User activity**: it notices scrolling speed (doomscrolling), mouse movement (waking up, wiggles) and
+  copy events (not what was copied).
+- [x] **Website content**: it reads where text lines are, and the text of pop-ups it eats (to roast them).
+
+Leave the rest unticked (personally identifiable, health, financial, authentication, personal
+communications, location). The privacy policy says the same, and that none of it leaves the device except
+a share link the user copies themselves (Wrapped: the week's counts, no sites).
 
 **Certify all three:**
 
@@ -111,9 +119,9 @@ colours, no sites. That's user-initiated sharing of content they chose, which th
 Presence sends, while a tab is visible and the user has it switched on: a SHA-256 hash of the page's
 origin and path (the room), and the pet's name, colour seed and stage. Then:
 
-- Data usage: tick **Web history** (the room hash is derived from the page address) and **Personally
-  identifiable information** only if you treat pet names as such (they're user-chosen display names; the
-  conservative answer is to tick it).
+- Data usage: Web history, User activity and Website content stay ticked (now partly transmitted: the room
+  hash is derived from the page address). Tick **Personally identifiable information** too if you treat pet
+  names as such (they're user-chosen display names; the conservative answer is to tick it).
 - Add `wss://<your server>` to the description's privacy section, and to the privacy policy's "Meeting other
   weblings" section.
 
