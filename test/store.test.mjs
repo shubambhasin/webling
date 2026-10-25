@@ -50,3 +50,8 @@ test('the privacy policy says presence is off only while it is', () => {
   assert.equal(policy.includes('<strong>switched off</strong>'), !presenceOn,
     'presenceUrl changed: update site/privacy.html and the "If presence is on" answers in store/listing.md');
 });
+
+test('the store link, once set, is a Chrome Web Store listing', () => {
+  const url = read('extension/shared/config.js').match(/storeUrl: '([^']*)'/)[1];
+  assert.ok(url === '' || /^https:\/\/chromewebstore\.google\.com\/detail\/[\w-]+\/[a-p]{32}$/.test(url), url);
+});

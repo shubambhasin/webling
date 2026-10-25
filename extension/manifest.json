@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Webling",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A tiny pixel pet that lives on your web pages. It eats cookie banners and pop-ups, and has opinions about your tabs.",
   "icons": {
     "16": "icons/16.png",

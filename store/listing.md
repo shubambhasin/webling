@@ -1,7 +1,7 @@
 # Chrome Web Store listing
 
 Copy and paste for the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole),
-field by field. The images are in `store/assets/` (regenerate them with `npm run store`), and the package
+field by field. The release plan and the steps around submitting are in [RELEASE.md](RELEASE.md). The images are in `store/assets/` (regenerate them with `npm run store`), and the package
 comes from `npm run zip` (`dist/webling-<version>.zip`).
 
 Written for launching **with presence off** (`presenceUrl: ''` in `extension/shared/config.js`). If presence is
@@ -14,7 +14,7 @@ policy first.
 
 | | |
 | --- | --- |
-| Upload | `dist/webling-0.1.0.zip` from `npm run zip` |
+| Upload | `dist/webling-1.0.0.zip` from `npm run zip` |
 | Name | Webling (from the manifest) |
 | Summary | From the manifest's `description` (132 characters max): *A tiny pixel pet that lives on your web pages. It eats cookie banners and pop-ups, and has opinions about your tabs.* |
 

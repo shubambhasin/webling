@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <title>Webling store screenshot</title>
   <!-- One Chrome Web Store screenshot: laid out at 640×400 and captured at 2x (1280×800).
-       ?n=1..5 picks the shot. scripts/store-assets.mjs first captures the mock page with the real extension
-       running on it (the extension skips iframes, so it can't run in here), then puts that picture in #page. -->
+       ?n=1..5 picks the shot. scripts/store-assets.mjs puts a picture in #page: a mock page captured with the real
+       extension running on it (the extension skips iframes, so it can't run in here), or a Wrapped card. -->
   <style>
     :root { --night: #0d0a17; --line: #2e2547; --text: #f4efff; --muted: #b6acd2; --violet: #8b5cff; --pink: #ff5fa2;
       --acid: #ffe14d; --cyan: #4de2ff; --ink: #120d1f; --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -36,19 +36,10 @@
     .ext img { width: 14px; height: 14px; image-rendering: pixelated; }
     .browser #page { display: block; width: 580px; height: 258px; }
 
-    /* shot 4: the popup on the right, the vibes on the left */
-    .side .cap { width: 228px; top: 30px; }
-    .side h1 { font-size: 30px; margin-bottom: 8px; }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-    .chips span { font: 700 11px var(--mono); padding: 4px 8px; border: 2px solid var(--ink); color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
-    .popup { position: absolute; left: 276px; top: 24px; width: 344px; height: 400px; border: 2px solid #000; border-bottom: 0;
-      box-shadow: 6px 6px 0 var(--pink); overflow: hidden; background: #fffdf5; }
-    .popup #page { display: block; width: 340px; height: 376px; }
-
-    /* shot 5: the share card, at its real size in device pixels */
+    /* shot 5: a Wrapped card, at its real size in device pixels */
     .card-shot .cap { width: 584px; }
     .card-shot .wordmark { display: none; }
-    #card { position: absolute; left: 20px; top: 78px; width: 600px; height: 315px; border: 2px solid #000; box-shadow: 5px 5px 0 var(--cyan); }
+    .card-shot #page { position: absolute; left: 20px; top: 78px; width: 600px; height: 315px; border: 2px solid #000; box-shadow: 5px 5px 0 var(--cyan); }
   </style>
 </head>
 <body>
@@ -62,11 +53,11 @@
       2: { title: 'Pop-ups don’t stand <em>a chance.</em>', url: 'fernhouse.example/monstera',
         sub: 'Newsletter traps, flash sales and paywall nags get eaten too, with a roast on the side. Wanted that one? Spit it out.' },
       3: { title: 'It has <em>takes.</em>', url: 'scrollr.example/home',
-        sub: 'It notices LinkedIn, midnight shopping and 3am doomscrolling, and it will say something about it. 300+ lines.' },
-      4: { layout: 'side', title: 'Five vibes. <em>Zero chill.</em>',
-        sub: 'Each vibe talks, moves and side-eyes differently. Pick one when you hatch, or let the egg decide.' },
-      5: { layout: 'card', title: 'Grows up. Farms aura. <em>Posts receipts.</em>',
-        sub: 'Baby to legend, NPC to final boss. Every pet gets its own colours and a share card to flex.' },
+        sub: 'It notices LinkedIn, midnight shopping and 3am doomscrolling, and says something about it in one of five vibes.' },
+      4: { title: 'Focus buddy. <em>It’s watching.</em>', url: 'scrollr.example/home',
+        sub: 'Start a 25 or 50 minute session. Your webling sits, stays quiet, and calls you out if you sneak off to the feed.' },
+      5: { layout: 'card', title: 'Your week, <em>wrapped.</em>',
+        sub: 'Every week a verdict on your week online, from 3am menace to offline icon. Share it as a link.' },
     };
     const shot = SHOTS[new URLSearchParams(location.search).get('n')] || SHOTS[1];
     document.getElementById('title').innerHTML = shot.title;
@@ -79,27 +70,9 @@
             <div class="ext"><img src="../extension/icons/32.png" alt=""></div></div>
           <img id="page" alt="A web page with a webling on it">
         </div>`);
-    } else if (shot.layout === 'side') {
-      document.body.classList.add('side');
-      const colors = ['#ffe14d', '#ff5fa2', '#4de2ff', '#8bffb0', '#c9b8ff'];
-      document.querySelector('.cap').insertAdjacentHTML('beforeend', `<div class="chips">${
-        ['Unbothered', 'Chaotic', 'Dramatic', 'Wholesome', 'Chronically online'].map((v, i) => `<span style="background:${colors[i]}">${v}</span>`).join('')}</div>`);
-      document.body.insertAdjacentHTML('beforeend', `<div class="popup"><img id="page" alt="The Webling popup"></div>`);
     } else {
       document.body.classList.add('card-shot');
-      document.body.insertAdjacentHTML('beforeend', '<img id="card" alt="A webling share card">');
-      (async () => {
-        for (const f of ['shared/config.js', 'shared/sprite.js', 'shared/pet.js', 'shared/voice.js', 'popup/card.js']) {
-          await new Promise((ok) => { const s = document.createElement('script'); s.src = `../extension/${f}`; s.onload = ok; document.body.append(s); });
-        }
-        const pet = Object.assign(WL.model.newPet(Date.now() - 94 * 864e5), {
-          name: 'Mochi', seed: 'mochi7', vibe: 'chaotic', hatched: true, xp: 1820, aura: 3140,
-          stats: { cookies: 613, popups: 388, sites: 412, boops: 0, booped: 0 },
-        });
-        pet.hatchedAt = pet.born;
-        document.getElementById('card').src = WL.card.render(pet, 412).toDataURL();
-        document.documentElement.dataset.ready = '1';
-      })();
+      document.body.insertAdjacentHTML('beforeend', '<img id="page" alt="A Webling Wrapped card">');
     }
   </script>
 </body>

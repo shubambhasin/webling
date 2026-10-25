@@ -329,7 +329,17 @@
 
   // ---- pixel lettering ----
   // ---- hatch, bury the page, let the pet loose ----
+  // Once the store listing is live (storeUrl in shared/config.js), installing is one click there.
+  function storeLink() {
+    if (!WL.config.storeUrl) return;
+    $('#get-sub').textContent = 'Free on the Chrome Web Store. It updates itself.';
+    $('#store-link').href = WL.config.storeUrl;
+    $('#get-store').hidden = false;
+    $('#get-steps').hidden = true;
+  }
+
   async function main() {
+    storeLink();
     await devInstall();
     state = await send({ type: 'state' });
     const returning = state.pet.hatched;

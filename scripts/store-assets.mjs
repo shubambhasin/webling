@@ -13,8 +13,8 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const out = `${root}store/assets`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Each screenshot: the mock page to capture first (top-level, at the size it fills in the frame, since the
-// extension skips iframes) and how to catch it at its best moment. Shot 5 is drawn by shot.html alone.
-const BROWSER = { width: 580, height: 258 }, POPUP = { width: 340, height: 376 };
+// extension skips iframes) and how to catch it at its best moment, or for shot 5 a Wrapped card.
+const BROWSER = { width: 580, height: 258 };
 const SHOTS = {
   1: { page: 'article.html', size: BROWSER, stage: async (page) => { // mid-chomp on the cookie banner
     await page.until(`document.getElementById('onetrust-banner-sdk')?.style.clipPath`, 20000, 'banner being eaten');
@@ -38,11 +38,28 @@ const SHOTS = {
     await page.eval(`(WL.me.strike('sideeye', 6), WL.me.say("it's 3:07am. go to sleep bestie", 5000), 1)`);
     await sleep(400);
   } },
-  4: { page: 'popup.html', size: POPUP, stage: async (page) => {
-    await page.until(`document.querySelector('.aura-row')`, 10000, 'popup home');
-    await sleep(1200);
+  4: { page: 'feed.html?halo&store=focus', size: BROWSER, stage: async (page) => { // a focus session, and a slip
+    await page.until(`WL.me && WL.brain.arrived && 1`, 10000, 'pet loaded');
+    await page.eval(`(async () => {
+      await chrome.runtime.sendMessage({ type: 'focusStart', mins: 25 });
+      const s = await chrome.storage.local.get('pet');
+      s.pet.focus.end = Date.now() + 18.5 * 60e3; // partway through
+      await chrome.storage.local.set(s);
+      return true;
+    })()`);
+    await page.until(`WL.focus.on`, 3000, 'focus on');
+    await sleep(1500);
+    await page.eval(`(() => { const r = document.querySelectorAll('.post p')[1].getBoundingClientRect();
+      Object.assign(WL.me, { x: scrollX + r.left + 250, y: scrollY + r.top - 30, vx: 0, vy: 0, mode: 'fall', on: null }); return 1; })()`);
+    await page.until(`WL.me.grounded`, 5000, 'pet landed on the post');
+    await page.eval(`(WL.me.strike('sideeye', 6), WL.me.say('scrollr? we said focus bestie', 5000), 1)`);
+    await sleep(400);
   } },
-  5: {},
+  5: { image: async () => { // a Wrapped card, drawn by the same function the site uses
+    const { GET } = await import('../api/wrapped-image.mjs');
+    const q = 'n=Mochi&s=mochi7&g=adult&v=chaotic&t=2&d=2026-10-18&e=2026-10-25&c=23&p=12&x=9&vi=412&l=17&ds=3&y=2&f=4&sl=1&a=286&k=social.140';
+    return Buffer.from(await (await GET(new Request(`https://webling.vercel.app/w/image.png?${q}`))).arrayBuffer());
+  } },
 };
 
 // Re-encode a PNG (8-bit RGB or RGBA, not interlaced) as 24-bit RGB.
@@ -124,11 +141,9 @@ const save = (file, png) => {
 try {
   for (const [n, shot] of Object.entries(SHOTS)) {
     if (only && only !== n) continue;
-    const inner = shot.page && (await snap(chrome, `${base}/${shot.page}`, shot.size, 2, shot.stage));
-    save(`screenshot-${n}.png`, await snap(chrome, `${base}/shot.html?n=${n}`, { width: 640, height: 400 }, 2, async (page) => {
-      if (inner) await page.eval(`(async () => { const img = document.getElementById('page'); img.src = 'data:image/png;base64,${inner.toString('base64')}'; await img.decode(); return 1; })()`);
-      else await page.until('document.documentElement.dataset.ready', 10000, 'shot drawn');
-    }));
+    const inner = shot.page ? await snap(chrome, `${base}/${shot.page}`, shot.size, 2, shot.stage) : await shot.image();
+    save(`screenshot-${n}.png`, await snap(chrome, `${base}/shot.html?n=${n}`, { width: 640, height: 400 }, 2, (page) =>
+      page.eval(`(async () => { const img = document.getElementById('page'); img.src = 'data:image/png;base64,${inner.toString('base64')}'; await img.decode(); return 1; })()`)));
   }
   for (const [size, width, height] of [['small', 440, 280], ['marquee', 1400, 560]]) {
     if (only && only !== `promo-${size}`) continue;

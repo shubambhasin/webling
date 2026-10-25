@@ -164,7 +164,9 @@ npm run build:site && node scripts/dev-server.mjs public
 
 ## Publishing to the Chrome Web Store
 
-Everything the dashboard asks for is in [`store/listing.md`](store/listing.md): the description, category,
+The release plan (account, submitting, review, launch day, updates) is [`store/RELEASE.md`](store/RELEASE.md);
+`npm run release` checks everything and builds the zip. Everything the dashboard asks for is in
+[`store/listing.md`](store/listing.md): the description, category,
 permission justifications, privacy-practices answers and a pre-submit checklist. The privacy policy is
 `site/privacy.html`, live at <https://webling.vercel.app/privacy>.
 
