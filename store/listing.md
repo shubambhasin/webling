@@ -51,6 +51,9 @@ Every week your webling gives you a verdict on your week online: "3am menace", "
 📸 SHARE CARD
 Your webling's colours, stats and today's mantra on a card made for posting.
 
+🙈 OUT OF THE WAY WHEN IT SHOULD BE
+It steps aside for full-screen video. Alt+Shift+W puts it away and brings it back, and you can keep it off any site you like.
+
 🔒 PRIVATE BY DESIGN
 • Everything stays on your device: your pet, your settings and the count of sites you've explored.
 • No accounts, no analytics, no ads, no tracking.
@@ -125,6 +128,22 @@ origin and path (the room), and the pet's name, colour seed and stage. Then:
 - Add `wss://<your server>` to the description's privacy section, and to the privacy policy's "Meeting other
   weblings" section.
 
+## Test instructions tab
+
+No login is needed. Paste this so the reviewer can see every feature quickly:
+
+```
+No account or login needed.
+
+1. Install. A welcome tab opens: name the egg and press Hatch.
+2. Open https://webling.vercel.app/try. The pet drops in and eats the cookie banner at the bottom, then the newsletter pop-up that appears after about 5 seconds. "Spit it out" (bottom left) puts each one back.
+3. Click the pet to poke it. Drag and throw it.
+4. Toolbar popup: press "25 min" to start a focus session, then open youtube.com in a new tab; the pet calls it out. "End early" stops the session. "This week so far, wrapped" shows the weekly recap.
+5. Alt+Shift+W hides and shows the pet. It also hides by itself during full-screen video.
+
+Everything stays on the device. The extension makes no network requests; the only server involved is webling.vercel.app, when the user opens a share link they copied themselves.
+```
+
 ## Distribution tab
 
 | | |
@@ -139,7 +158,8 @@ origin and path (the room), and the pet's name, colour seed and stage. Then:
 - [ ] `presenceUrl` is what you mean it to be (`npm run zip` says whether presence is on).
 - [ ] `version` in `extension/manifest.json` is higher than the last upload (each upload needs a new one).
 - [ ] https://webling.vercel.app/privacy is live and matches the answers above.
-- [ ] One-time: the developer account ($5 registration fee) and verified contact email.
+- [ ] One-time: the developer account ($5 registration fee), 2-Step Verification on the Google account, a
+  verified contact email, and the trader / non-trader declaration (non-trader for a free personal project).
 
 Review usually takes a few days. Broad host access is the most likely thing a reviewer asks about; the
 justification above answers it, and the source is public if they want to look.
