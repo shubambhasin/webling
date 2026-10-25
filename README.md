@@ -42,8 +42,9 @@ Add `?timers` to drive animation from timers (for automated checks in background
 npm test
 ```
 
-- `npm run test:unit`: the art, life rules, the voice, background state handling, the store kit and the
-  presence server (seconds). `voice.test` checks every event the code names has lines for every vibe, every line fits
+- `npm run test:unit`: the art, life rules, the voice, background state handling, the store kit, shareable
+  roasts (the page and its preview image) and the presence server (seconds). Run `npm install` first:
+  the roast images need satori and resvg. `voice.test` checks every event the code names has lines for every vibe, every line fits
   a bubble, fills its placeholders and stays PG, and that site detection can't be fooled by lookalike
   domains.
 - `npm run test:e2e`: real headless Chrome, driven over the DevTools protocol with no dependencies
@@ -68,6 +69,7 @@ npm test
 | `extension/content/eater.js` | finds cookie banners and promo modals and eats them (with undo) |
 | `extension/content/presence.js` | other people's weblings on the same page, and boops |
 | `extension/popup/` | hatching, the pet's home, settings, the share card |
+| `api/` | shareable roasts: the `/r/<site>` page and its preview image (Vercel functions) |
 | `server/` | presence relay; stores nothing |
 | `store/` | the Chrome Web Store kit: listing copy and privacy answers, images, and the mock pages they're shot on |
 
@@ -118,6 +120,17 @@ real extension on itself: every visitor hatches a pet, the page buries itself in
 banner, newsletter, notifications, a flash sale) and the pet eats its way out. Then: "It has takes"
 (pick a place or roast any domain, in any vibe), a three-question vibe check whose result can become
 your pet's vibe and be shared, and the aura ladder. Reduced motion skips the chaos.
+
+**Shareable roasts.** Every take on a website in the roast box has a "Share this roast" button. The link,
+`/r/<site>?v=<vibe>&t=<take>&n=<name>&s=<seed>&g=<stage>`, is a page whose link preview (X, WhatsApp, Slack,
+Discord, iMessage) is your pet saying that exact take about that site: a 1200×630 PNG drawn by
+`api/roast-image.mjs` with satori and resvg, from the extension's own `voice.js` and pixel art. Every query
+parameter is optional, so `/r/linkedin.com` works on its own. People who open the link can roast their own
+site from there. `vercel.json` rewrites `/r/*` to the functions in `api/`; the local dev server runs the
+same handlers, so `npm run build:site && node scripts/dev-server.mjs public` serves them too.
+
+**Themes.** Dark (the original), light and paper. The site follows the system setting until you pick one in
+the header, and remembers the pick (`site/theme.js`). Colours are tokens at the top of `site/site.css`.
 
 `npm run build:site` assembles it into
 `public/`: the page, the extension's scripts (so the page runs the real extension on itself), the

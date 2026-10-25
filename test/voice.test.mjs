@@ -125,3 +125,31 @@ test('aura tiers and changes', () => {
   assert.equal(M.auraTier(p), 'aura debt');
   assert.equal(M.auraTier({}), 'NPC', 'pets from before aura existed');
 });
+
+test('hostOf finds the website in whatever was typed, and rejects what is not one', () => {
+  const { hostOf } = WL.voice;
+  assert.equal(hostOf('https://WWW.LinkedIn.com/in/someone?x=1'), 'linkedin.com');
+  assert.equal(hostOf('  amazon.in:443/cart '), 'amazon.in');
+  assert.equal(hostOf('my-blog.dev'), 'my-blog.dev');
+  for (const bad of ['lol', '', null, 'http://', 'a b.com', '<script>.com', 'x.c', `${'a'.repeat(250)}.com`]) {
+    assert.equal(hostOf(bad), null, String(bad));
+  }
+});
+
+test('a roast is the same take for the same host, vibe and number, and every number works', () => {
+  const r = WL.voice.roast('linkedin.com', 'dramatic', 3);
+  assert.equal(r.event, 'site_linkedin');
+  assert.deepEqual(WL.voice.roast('www.linkedin.com', 'dramatic', 3), r);
+  const n = new Set(WL.voice.pool('site_linkedin', 'dramatic')).size;
+  assert.equal(WL.voice.roast('linkedin.com', 'dramatic', 3 + n * 7).text, r.text, 'wraps');
+  assert.equal(WL.voice.roast('linkedin.com', 'dramatic', -1).t, n - 1, 'negative numbers wrap too');
+  const fresh = WL.voice.roast('my-blog.dev', 'chaotic', 0);
+  assert.equal(fresh.event, 'arrive_new');
+  assert.ok(!/[{}]/.test(fresh.text), fresh.text);
+  for (const kind of [...Object.keys(WL.voice.SITES), null]) {
+    for (const vibe of WL.voice.VIBE_IDS) {
+      const host = kind ? WL.voice.SITES[kind][0] : 'unknown-site.example';
+      assert.ok(WL.voice.roast(host, vibe, 0).text, `${kind} ${vibe}`);
+    }
+  }
+});

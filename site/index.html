@@ -12,12 +12,14 @@
   <meta name="theme-color" content="#0d0a17">
   <link rel="icon" href="/ext/icons/32.png">
   <link rel="stylesheet" href="/site.css">
+  <script src="/theme.js"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="top">
     <a class="brand" href="/" aria-label="Webling home"><canvas class="wordmark" data-text="WEBLING" data-cell="3" aria-hidden="true"></canvas></a>
     <nav aria-label="Sections">
+      <div class="theme-switch" role="group" aria-label="Theme"></div>
       <a href="#takes">Takes</a>
       <a href="#vibe-check">Vibe check</a>
       <a href="#aura">Aura</a>
@@ -91,6 +93,10 @@
               <input id="roast-input" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="linkedin.com">
               <button class="btn small" type="submit">Roast</button>
             </div>
+            <div class="share-row" id="share-row" hidden>
+              <button class="btn small primary" id="share-roast" type="button">Share this roast</button>
+              <a id="roast-link" href="/" target="_blank" rel="noopener">see the card ↗</a>
+            </div>
           </form>
           <div class="vibe-switch">
             <span>Hear it in another vibe:</span>
@@ -158,6 +164,7 @@
   <script src="/ext/shared/voice.js"></script>
   <script src="/ext/background.js"></script>
   <script src="/wordmark.js"></script>
+  <script src="/share.js"></script>
   <script src="/site.js"></script>
 </body>
 </html>

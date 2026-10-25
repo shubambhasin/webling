@@ -322,6 +322,24 @@
       return voice.fill(pick, vars);
     },
 
+    // The bare hostname in whatever someone typed ("https://www.LinkedIn.com/in/x" → "linkedin.com"),
+    // or null if it isn't a website.
+    hostOf(input) {
+      const host = String(input ?? '').trim().toLowerCase()
+        .replace(/^[a-z]+:\/\//, '').replace(/[/?#:].*$/, '').replace(/^www\./, '');
+      return host.length <= 253 && /^([a-z0-9-]+\.)+[a-z]{2,}$/.test(host) ? host : null;
+    },
+
+    // A take on a website, for the roast box and shareable roast links (/r/<host>). t picks the line
+    // (any integer; it wraps), so a shared link always shows the take that was shared.
+    roast(host, vibe, t = 0, vars = {}) {
+      const kind = voice.siteKind(host);
+      const event = kind ? `site_${kind}` : 'arrive_new';
+      const lines = [...new Set(voice.pool(event, vibe))];
+      t = ((Math.trunc(t) % lines.length) + lines.length) % lines.length;
+      return { event, kind, t, text: voice.fill(lines[t], { ...vars, host }) };
+    },
+
     mantra(pet, date = new Date()) {
       const day = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       return MANTRAS[hash(`${pet?.seed}:${day}`) % MANTRAS.length];

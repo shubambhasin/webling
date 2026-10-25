@@ -129,6 +129,79 @@ test('roast any site: recognises domains, and tells you when it is not one', { s
   }
 });
 
+test('a roast can be shared: the link shows the same take, with a preview image', { skip }, async () => {
+  const p = await calmPage();
+  try {
+    await p.eval(`document.querySelector('#roast-input').value = 'https://www.linkedin.com/in/me'; document.querySelector('#roast button').click(); true`);
+    assert.equal(await p.eval(`document.querySelector('#share-row').hidden`), false, 'share button shows for a site');
+    const take = await p.eval(`document.querySelector('#take-text').textContent`);
+    const href = await p.eval(`document.querySelector('#roast-link').href`);
+    const q = new URL(href).searchParams;
+    assert.equal(new URL(href).pathname, '/r/linkedin.com');
+    assert.equal(q.get('n'), await p.eval('WL.state.pet.name'));
+    assert.equal(q.get('v'), await p.eval(`document.querySelector('#vibe-chips [aria-pressed="true"]').dataset.vibe`));
+
+    // Share copies the link (stubbed clipboard: headless Chrome has none to give)
+    await p.eval(`navigator.clipboard.writeText = (t) => { window.copied = t; return Promise.resolve(); }; true`);
+    await p.click('#share-roast');
+    assert.equal(await p.until('window.copied', 2000, 'link copied'), href);
+    assert.match(await p.eval(`document.querySelector('#share-roast').textContent`), /copied/);
+
+    // A moment that isn't a website has nothing to share
+    await p.click('#take-chips button:nth-child(7)'); // 3:07 AM
+    assert.equal(await p.eval(`document.querySelector('#share-row').hidden`), true);
+
+    const page = await chrome.open(href);
+    try {
+      assert.equal(await page.eval(`document.querySelector('meta[property="og:title"]').content`), `“${take}”`);
+      const img = await page.eval(`document.querySelector('meta[property="og:image"]').content`);
+      assert.match(img, /\/r\/linkedin\.com\/image\.png\?/);
+      const r = await fetch(img);
+      assert.equal(r.status, 200);
+      assert.equal(r.headers.get('content-type'), 'image/png');
+      await page.until(`document.querySelector('img.card').complete && document.querySelector('img.card').naturalWidth === 1200`, 10000, 'card shown on the page');
+      // and roast another from there
+      await page.eval(`document.querySelector('#roast-input').value = 'my-blog.dev'; document.querySelector('#roast button').click(); true`);
+      await page.until(`location.pathname === '/r/my-blog.dev'`, 10000, 'went to the new roast');
+      assert.deepEqual(page.errors, []);
+    } finally {
+      page.close();
+    }
+  } finally {
+    p.close();
+  }
+});
+
+test('themes: follows the system until you pick dark, light or paper, then remembers', { skip }, async () => {
+  const p = await chrome.open('about:blank');
+  const bg = () => p.eval('getComputedStyle(document.documentElement).backgroundColor');
+  const pressed = () => p.eval(`document.querySelector('.theme-switch [aria-pressed="true"]').dataset.theme`);
+  try {
+    await p.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
+    await p.send('Page.navigate', { url: `${base}/` });
+    await p.until(`document.querySelector('.theme-switch button')`, 10000, 'theme switch');
+    await p.eval(`localStorage.removeItem('webling-theme'), true`);
+    await p.send('Page.reload');
+    await p.until(`document.querySelector('.theme-switch button')`, 10000, 'theme switch');
+    assert.equal(await p.eval('document.documentElement.dataset.theme ?? null'), null);
+    assert.equal(await bg(), 'rgb(247, 245, 255)', 'light system → light page');
+    assert.equal(await pressed(), 'light');
+
+    await p.eval(`document.querySelector('.theme-switch [data-theme="paper"]').click(), true`);
+    assert.equal(await bg(), 'rgb(245, 237, 214)');
+    await p.send('Page.reload');
+    await p.until(`document.querySelector('.theme-switch button')`, 10000, 'theme switch');
+    assert.equal(await p.eval('document.documentElement.dataset.theme'), 'paper', 'remembered');
+    assert.equal(await pressed(), 'paper');
+
+    await p.eval(`document.querySelector('.theme-switch [data-theme="dark"]').click(), true`);
+    assert.equal(await bg(), 'rgb(13, 10, 23)', 'dark even on a light system');
+    await p.eval(`localStorage.removeItem('webling-theme'), true`);
+  } finally {
+    p.close();
+  }
+});
+
 test('vibe check: three answers give a vibe, and it can become your pet’s vibe', { skip }, async () => {
   const p = await calmPage();
   try {
@@ -185,9 +258,9 @@ test('a returning visitor keeps their pet', { skip }, async () => {
 });
 
 test('the download, preview image and privacy policy are served', { skip }, async () => {
-  for (const [path, type] of [['/webling-extension.zip', 'application/zip'], ['/og.png', 'image/png'], ['/privacy.html', 'text/html']]) {
+  for (const [path, type] of [['/webling-extension.zip', 'application/zip'], ['/og.png', 'image/png'], ['/privacy.html', 'text/html'], ['/r/lol', 'text/html']]) {
     const r = await fetch(base + path);
-    assert.equal(r.status, 200, path);
+    assert.equal(r.status, path === '/r/lol' ? 404 : 200, path);
     assert.ok(r.headers.get('content-type').startsWith(type), `${path}: ${r.headers.get('content-type')}`);
   }
 });

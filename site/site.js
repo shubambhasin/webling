@@ -131,12 +131,16 @@
   }
 
   // ---- takes ----
+  // Sites (with a host) get a roast that can be shared as a link; the rest are just moments.
   const PLACES = [
-    ['LinkedIn', 'site_linkedin', {}, 'sideeye'], ['Amazon', 'site_shopping', {}, 'happy'], ['Reddit', 'site_reddit', {}, 'sideeye'],
-    ['GitHub', 'site_dev', {}, 'meh'], ['YouTube', 'site_video', {}, 'happy'], ['ChatGPT', 'site_ai', {}, 'sideeye'],
-    ['3:07 AM', 'time_late', { time: '3:07 AM' }, 'shock'], ['Doomscrolling', 'doomscroll', {}, 'shock'],
-    ['Monday', 'time_monday', {}, 'meh'], ['A pop-up', 'ate_popup', {}, 'eat'],
+    { label: 'LinkedIn', host: 'linkedin.com', clip: 'sideeye' }, { label: 'Amazon', host: 'amazon.com', clip: 'happy' },
+    { label: 'Reddit', host: 'reddit.com', clip: 'sideeye' }, { label: 'GitHub', host: 'github.com', clip: 'meh' },
+    { label: 'YouTube', host: 'youtube.com', clip: 'happy' }, { label: 'ChatGPT', host: 'chatgpt.com', clip: 'sideeye' },
+    { label: '3:07 AM', event: 'time_late', vars: { time: '3:07 AM' }, clip: 'shock' },
+    { label: 'Doomscrolling', event: 'doomscroll', clip: 'shock' }, { label: 'Monday', event: 'time_monday', clip: 'meh' },
+    { label: 'A pop-up', event: 'ate_popup', clip: 'eat' },
   ];
+  const randomTake = () => Math.floor(Math.random() * 1000);
   let takeVibe = null, lastTake = null, stageClip = 'idle', stageT = 0;
 
   function setupTakes() {
@@ -145,11 +149,11 @@
     for (const p of PLACES) {
       const b = document.createElement('button');
       b.type = 'button';
-      b.textContent = p[0];
+      b.textContent = p.label;
       b.setAttribute('aria-pressed', 'false');
       b.onclick = () => {
         chips.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-        take(p);
+        take({ ...p, t: randomTake() });
       };
       chips.appendChild(b);
     }
@@ -169,18 +173,28 @@
     }
     $('#roast').onsubmit = (e) => {
       e.preventDefault();
-      const host = $('#roast-input').value.trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/[/?#].*$/, '').replace(/^www\./, '');
-      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(host)) return say("that's not a website bestie", 'meh');
-      const kind = WL.voice.siteKind(host);
-      take(['', kind ? `site_${kind}` : 'arrive_new', { host }, kind ? 'sideeye' : 'happy']);
+      const host = WL.voice.hostOf($('#roast-input').value);
+      if (!host) {
+        lastTake = null;
+        $('#share-row').hidden = true;
+        return say("that's not a website bestie", 'meh');
+      }
+      $('#take-chips').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      take({ host, t: randomTake() });
     };
+    $('#share-roast').onclick = () => shareLink($('#share-roast'), $('#roast-link').href, `“${$('#take-text').textContent}”`);
     animateStage();
   }
 
   function take(p) {
     lastTake = p;
-    const [, event, vars, clip] = p;
-    say(WL.voice.line(event, takeVibe, { name: pet.name, ...vars }), clip);
+    $('#share-row').hidden = !p.host;
+    if (!p.host) return say(WL.voice.line(p.event, takeVibe, { name: pet.name, ...p.vars }), p.clip);
+    const r = WL.voice.roast(p.host, takeVibe, p.t);
+    say(r.text, p.clip || (r.kind ? 'sideeye' : 'happy'));
+    // the same take, as a link whose preview is this pet saying it (api/roast.mjs)
+    const q = new URLSearchParams({ v: takeVibe, t: r.t, n: pet.name, s: pet.seed, g: WL.model.stage(pet) });
+    $('#roast-link').href = `/r/${p.host}?${q}`;
   }
 
   function say(text, clip = 'happy') {

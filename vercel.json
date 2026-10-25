@@ -1,13 +1,32 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node scripts/build-site.mjs",
-  "installCommand": "",
   "outputDirectory": "public",
   "cleanUrls": true,
+  "functions": {
+    "api/roast*.mjs": {
+      "includeFiles": "{extension/shared/**,api/_fonts/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/r/:domain/image.png",
+      "destination": "/api/roast-image?domain=:domain"
+    },
+    {
+      "source": "/r/:domain",
+      "destination": "/api/roast?domain=:domain"
+    }
+  ],
   "headers": [
     {
       "source": "/webling-extension.zip",
-      "headers": [{ "key": "Content-Disposition", "value": "attachment; filename=\"webling-extension.zip\"" }]
+      "headers": [
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"webling-extension.zip\""
+        }
+      ]
     }
   ]
 }

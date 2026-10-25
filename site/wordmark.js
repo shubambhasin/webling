@@ -1,5 +1,6 @@
-// The pixel wordmark: <canvas class="wordmark" data-text="WEBLING" data-cell="6"> gets drawn on load.
-// Also used by the store art (store/).
+// The pixel wordmark: <canvas class="wordmark" data-text="WEBLING" data-cell="6"> gets drawn on load, in the
+// canvas's CSS colour with a --pink shadow (theme.js redraws it when the theme changes). Also used by the
+// store art (store/).
 function drawWordmark(c) {
   const FONT = {
     W: ['1...1', '1...1', '1...1', '1.1.1', '1.1.1', '1.1.1', '.1.1.'],
@@ -27,8 +28,9 @@ function drawWordmark(c) {
       x += glyph[0].length + 1;
     }
   };
-  paint(0.5, 0.5, '#ff5fa2');
-  paint(0, 0, '#f4efff');
+  g.clearRect(0, 0, c.width, c.height);
+  paint(0.5, 0.5, getComputedStyle(document.documentElement).getPropertyValue('--pink').trim() || '#ff5fa2');
+  paint(0, 0, getComputedStyle(c).color || '#f4efff');
 }
 
 document.querySelectorAll('canvas.wordmark').forEach(drawWordmark);
