@@ -162,6 +162,18 @@ input[type=text] {
 .settings .check { margin-bottom: 8px; }
 .week { font-size: 11px; margin: 10px 0 0; }
 
+.wrapped-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 10px; text-align: left;
+  background: var(--ink); color: var(--paper); box-shadow: 2px 2px 0 var(--accent);
+}
+.wrapped-btn span { margin-left: auto; }
+.wrapped-btn i { font-style: normal; font-size: 10px; text-transform: uppercase; background: var(--warn); color: #1b1528; padding: 0 5px; }
+.wrapped .when { font-size: 11px; margin: 0 0 8px; }
+.wrapped .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin: 0; }
+.wrapped .verdict { font-size: 24px; line-height: 1.1; margin: 2px 0 10px; }
+.wrapped .said::before { display: none; }
+.wrapped .fine { margin-top: 8px; }
+
 .share {
   position: fixed;
   inset: 0;

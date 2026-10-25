@@ -111,5 +111,32 @@
     return `My ${vibe} webling ${pet.name} ${ate} across ${sites} site${sites === 1 ? '' : 's'}. Aura: ${WL.model.auraTier(pet)}. Hatch yours:`;
   }
 
-  WL.card = { render, shareText };
+  // Webling Wrapped: last week once there is one, otherwise this week so far, with its verdict and roast.
+  // The same week always gets the same take.
+  function wrappedWeek(pet, now = Date.now()) {
+    const last = !!pet.lastWeek, w = pet.lastWeek || pet.week;
+    const auraEnd = last ? w.auraEnd : pet.aura || 0;
+    const aura = typeof w.auraStart === 'number' && typeof auraEnd === 'number' ? auraEnd - w.auraStart : null;
+    const t = Math.floor(w.start / 1000) % 9973;
+    return { last, w, start: w.start, end: last ? w.start + WL.model.WEEK : now, aura, ...WL.voice.wrapped(w, WL.voice.vibeOf(pet), t) };
+  }
+
+  // Its share link: /w with the week's numbers in the query (api/_wrapped.mjs reads them back). Nothing
+  // else about the week (no sites) goes in it, and nothing is sent anywhere until someone opens it.
+  function wrappedLink(pet, r) {
+    const w = r.w, day = (ms) => {
+      const d = new Date(ms);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const q = new URLSearchParams({
+      n: pet.name, s: pet.seed, g: WL.model.stage(pet), v: WL.voice.vibeOf(pet), t: r.t, d: day(r.start), e: day(r.end),
+      c: w.cookies || 0, p: w.popups || 0, x: w.sites || 0, vi: w.visits || 0, l: w.late || 0, ds: w.doomscrolls || 0, y: w.yeets || 0,
+    });
+    if (r.aura !== null) q.set('a', r.aura);
+    if (r.top) q.set('k', `${r.top.kind}.${w.kinds[r.top.kind]}`);
+    if (!r.last) q.set('so', '1'); // "so far"
+    return `${WL.config.shareUrl}/w?${q}`;
+  }
+
+  WL.card = { render, shareText, wrappedWeek, wrappedLink };
 })();

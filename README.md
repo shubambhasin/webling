@@ -69,7 +69,7 @@ npm test
 | `extension/content/eater.js` | finds cookie banners and promo modals and eats them (with undo) |
 | `extension/content/presence.js` | other people's weblings on the same page, and boops |
 | `extension/popup/` | hatching, the pet's home, settings, the share card |
-| `api/` | shareable roasts: the `/r/<site>` page and its preview image (Vercel functions) |
+| `api/` | share links: roasts (`/r/<site>`) and Webling Wrapped (`/w`), pages and preview images (Vercel functions) |
 | `server/` | presence relay; stores nothing |
 | `store/` | the Chrome Web Store kit: listing copy and privacy answers, images, and the mock pages they're shot on |
 
@@ -128,6 +128,14 @@ Discord, iMessage) is your pet saying that exact take about that site: a 1200×6
 parameter is optional, so `/r/linkedin.com` works on its own. People who open the link can roast their own
 site from there. `vercel.json` rewrites `/r/*` to the functions in `api/`; the local dev server runs the
 same handlers, so `npm run build:site && node scripts/dev-server.mjs public` serves them too.
+
+**Webling Wrapped.** The popup's "Last week, wrapped" (or "This week so far" in a pet's first week) gives a
+verdict on the week, a roast of it in the pet's vibe, and the numbers: pop-ups eaten, new sites, pages,
+pages after midnight, doomscrolls, yeets, aura gained and the kind of site that defined the week. The
+background counts these into `pet.week` (`visits`, `late`, `kinds`, `doomscrolls`, `yeets`, `auraStart`) and
+rolls it into `pet.lastWeek` every seven days. The verdict rules and lines are `wrapped()` in `voice.js`.
+"Share my week" copies a link, `/w?…`, that carries the numbers (never sites); `api/wrapped.mjs` and
+`api/wrapped-image.mjs` turn it back into the same verdict and a 1200×630 card for link previews.
 
 **Themes.** Dark (the original), light and paper. The site follows the system setting until you pick one in
 the header, and remembers the pick (`site/theme.js`). Colours are tokens at the top of `site/site.css`.

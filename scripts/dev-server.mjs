@@ -6,7 +6,8 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // Shareable roasts are functions on Vercel (rewrites in vercel.json); the same handlers run here.
-const ROUTES = [[/^\/r\/([^/]+)\/image\.png$/, 'roast-image'], [/^\/r\/([^/]+)\/?$/, 'roast']];
+const ROUTES = [[/^\/r\/([^/]+)\/image\.png$/, 'roast-image'], [/^\/r\/([^/]+)\/?$/, 'roast'],
+  [/^\/w\/image\.png$/, 'wrapped-image'], [/^\/w\/?$/, 'wrapped']];
 
 async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -15,7 +16,7 @@ async function route(req, res) {
     if (!m) continue;
     const { GET } = await import(`../api/${name}.mjs`);
     const fn = new URL(`/api/${name}${url.search}`, url);
-    fn.searchParams.set('domain', decodeURIComponent(m[1]));
+    if (m[1]) fn.searchParams.set('domain', decodeURIComponent(m[1]));
     const r = await GET(new Request(fn));
     res.writeHead(r.status, Object.fromEntries(r.headers));
     res.end(Buffer.from(await r.arrayBuffer()));

@@ -1,10 +1,10 @@
-// The shared roast page (/r/<host>, made by api/roast.mjs): share it, or roast another site.
+// Shared roast and Wrapped pages (api/roast.mjs, api/wrapped.mjs): share it, or roast a site.
 (() => {
   const share = document.getElementById('share');
   if (share) share.onclick = () => shareLink(share, share.dataset.url, share.dataset.text);
 
   const form = document.getElementById('roast');
-  form.onsubmit = (e) => {
+  if (form) form.onsubmit = (e) => {
     e.preventDefault();
     const host = WL.voice.hostOf(document.getElementById('roast-input').value);
     document.getElementById('roast-error').hidden = !!host;

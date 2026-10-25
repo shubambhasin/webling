@@ -108,6 +108,8 @@
         <button id="snack" ${snackWait > 0 ? 'disabled' : ''}>${snackWait > 0 ? `Snack in ${fmtWait(snackWait)}` : 'Give a snack'}</button>
         <button id="share-btn" class="primary">Share card</button>
       </div>
+      <button class="wrapped-btn" id="wrapped-btn">📼 ${p.lastWeek ? 'Last week, wrapped' : 'This week so far, wrapped'}
+        ${p.lastWeek && !p.lastWeek.seen ? '<i>new</i>' : ''}<span>→</span></button>
       <div class="settings">
         <label class="check"><input type="checkbox" id="eat" ${state.settings.eat ? 'checked' : ''}><span>Eat cookie banners and pop-ups</span></label>
         ${host ? `<label class="check"><input type="checkbox" id="eat-here" ${state.settings.noEat.includes(host) ? '' : 'checked'} ${state.settings.eat ? '' : 'disabled'}>
@@ -131,6 +133,7 @@
       }
     };
     $('#share-btn').onclick = openShare;
+    $('#wrapped-btn').onclick = wrapped;
     $('#eat').onchange = async (e) => { state = await send({ type: 'settings', patch: { eat: e.target.checked } }); render(); };
     $('#presence').onchange = async (e) => (state = await send({ type: 'settings', patch: { presence: e.target.checked } }));
     const here = $('#eat-here');
@@ -150,6 +153,51 @@
     const m = Math.ceil(ms / 60e3);
     return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
   };
+
+  // ---- Webling Wrapped ----
+  function wrapped() {
+    stage?.stop();
+    const p = state.pet, r = WL.card.wrappedWeek(p), w = r.w;
+    if (r.last && !w.seen) send({ type: 'wrappedSeen' }).then((s) => s && (state = s));
+    const date = (ms) => new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const tiles = [
+      [r.eaten, 'pop-ups & banners eaten'], [w.sites || 0, 'new sites'], [w.visits || 0, 'pages visited'],
+      [w.late || 0, 'after midnight'], [w.doomscrolls || 0, 'doomscrolls'], [w.yeets || 0, 'times yeeted'],
+    ];
+    if (r.aura !== null) tiles.push([`${r.aura >= 0 ? '+' : ''}${r.aura}`, 'aura']);
+    if (r.top) tiles.push([`${r.top.share}%`, r.top.kind]);
+    const link = WL.card.wrappedLink(p, r);
+    app.innerHTML = `
+      <header><b>webling</b><span class="pill">Wrapped</span></header>
+      <section class="wrapped">
+        <p class="when">${esc(p.name)}'s week · ${date(r.start)} – ${r.last ? date(r.end) : 'so far'}</p>
+        <p class="eyebrow">the verdict</p>
+        <h1 class="verdict">${esc(r.label)}</h1>
+        <canvas class="stage" aria-label="${esc(p.name)}"></canvas>
+        <p class="said" id="said">${esc(r.text)}</p>
+        <div class="stats">${tiles.map(([v, label]) => `<div><b>${esc(v)}</b><span>${esc(label)}</span></div>`).join('')}</div>
+        <div class="actions">
+          <button id="wrapped-share" class="primary">Share my week</button>
+          <button id="wrapped-open">See the card ↗</button>
+        </div>
+        <small class="fine">The link carries these numbers, your pet's name and colours. No sites. Nothing is sent until someone opens it.</small>
+        <button class="link" id="wrapped-back">← back</button>
+      </section>`;
+    stage = new Stage($('.stage'), () => ({ stage: M.stage(p), seed: p.seed }));
+    stage.celebrate();
+    $('#wrapped-share').onclick = async () => {
+      const b = $('#wrapped-share');
+      try {
+        await navigator.clipboard.writeText(link);
+        b.textContent = 'Link copied ✓';
+      } catch {
+        b.textContent = "Couldn't copy";
+      }
+      setTimeout(() => (b.textContent = 'Share my week'), 2000);
+    };
+    $('#wrapped-open').onclick = () => chrome.tabs.create({ url: link });
+    $('#wrapped-back').onclick = render;
+  }
 
   // ---- share card ----
   async function openShare() {

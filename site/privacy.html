@@ -27,6 +27,9 @@
     <ul>
       <li><strong>Your pet:</strong> its name, colours, vibe, growth, aura, hunger and stats (like how many cookie banners it has eaten).</li>
       <li><strong>Your settings:</strong> whether eating is on, and the sites where you've switched it off.</li>
+      <li><strong>This week's and last week's numbers:</strong> pages visited, pages opened after midnight, how many of
+        them were each kind of site (shopping, social, news and so on, worked out from the address), doomscrolls,
+        times it was thrown, and aura gained. They make your weekly Webling Wrapped. No addresses are kept for these.</li>
       <li><strong>Sites it has visited:</strong> the hostname (like <code>example.com</code>, never the full address) with a visit count and the last visit time, kept for the "sites explored" count and so the pet can greet sites it knows. Capped at 5,000 sites.</li>
     </ul>
     <p>All of this is stored with the browser's own extension storage (<code>chrome.storage.local</code>) and never
@@ -48,8 +51,12 @@
       sign-in sites, and you'll be able to switch it off.</p>
 
     <h2>Sharing</h2>
-    <p>The share card is made on your device. It's only posted if you post it, using the "Post on X" button or
-      by saving the image yourself.</p>
+    <p>The share card and your Webling Wrapped are made on your device. Nothing from them leaves it unless you share it.</p>
+    <p>Share links work by carrying what they show in the link itself. A <strong>Wrapped link</strong> carries that week's
+      numbers, the kind of site you visited most and how often, and your pet's name, colours, stage and vibe. It never
+      carries the sites you visited. A <strong>roast link</strong> (from the website) carries the site being roasted
+      and your pet's name and colours. Anyone with a link can see what's in it, and opening one makes
+      webling.vercel.app draw its picture. Like any web request, that passes through Vercel's servers and logs.
 
     <h2>This website</h2>
     <p>webling.vercel.app runs a demo pet in your browser and keeps it in your browser's local storage. The site

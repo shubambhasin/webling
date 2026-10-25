@@ -42,6 +42,9 @@ Every meal and every new site helps it grow from baby to grown-up to legend (wit
 🫶 A PET THAT WON'T GUILT-TRIP YOU
 It gets hungry, you can give it snacks, and it falls asleep if you leave it alone. It never dies. Poke it, pick it up, throw it.
 
+📼 WEBLING WRAPPED
+Every week your webling gives you a verdict on your week online: "3am menace", "add-to-cart era", "pop-up predator", "offline icon" and more, with a roast in its vibe and your numbers. Share it as a link that shows the card wherever you post it.
+
 📸 SHARE CARD
 Your webling's colours, stats and today's mantra on a card made for posting.
 
@@ -80,7 +83,7 @@ Webling is a virtual pet that lives on the web pages you visit. It walks on the 
 
 | Permission | Justification |
 | --- | --- |
-| `storage` | `Saves the pet (name, colours, growth, aura, hunger, stats), the user's settings, and the list of hostnames it has visited, so it can show "sites explored" and greet sites it knows. Stored locally with chrome.storage.local; never sent anywhere.` |
+| `storage` | `Saves the pet (name, colours, growth, aura, hunger, stats, this week's and last week's counts for the weekly recap), the user's settings, and the list of hostnames it has visited, so it can show "sites explored" and greet sites it knows. Stored locally with chrome.storage.local; never sent anywhere.` |
 | Host permission (content script on `http://*/*` and `https://*/*`) | `The pet is drawn on top of every page the user visits. It needs the page's layout to stand and walk on lines of text, and to find cookie banners and pop-ups that cover the page so it can hide them. It reads only element positions, styles and the visible text of overlays, all on the device. Nothing from the page is collected or transmitted.` |
 
 **Are you using remote code?** No, I am not using remote code.
@@ -88,7 +91,9 @@ Webling is a virtual pet that lives on the web pages you visit. It walks on the 
 
 **Data usage: what user data do you plan to collect?** Tick nothing. With presence off, the extension
 makes no network requests at all; everything it keeps stays in `chrome.storage.local`. (The store counts
-data as collected only when it leaves the device.)
+data as collected only when it leaves the device.) The one thing that can leave is a Webling Wrapped link,
+and only when the user copies or opens it themselves: it carries the week's counts and the pet's name and
+colours, no sites. That's user-initiated sharing of content they chose, which the privacy policy explains.
 
 **Certify all three:**
 

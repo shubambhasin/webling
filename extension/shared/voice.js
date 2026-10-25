@@ -240,6 +240,61 @@
     booped: { all: ['{other} booped me!', '{other} said hi (with violence)', 'boop received from {other}'] },
     boop_sent: { all: ['you booped {other}', '{other} has been booped', 'boop delivered'] },
     ghost_hi: { all: ['hi!', 'hey bestie', 'sup', 'o/'] },
+
+    // ---- Webling Wrapped: a roast of the week, one event per verdict (see wrapped() below) ----
+    wrapped_touch_grass: {
+      all: ['only {n} pages all week? who are you', "you touched grass. i'm so proud", 'quiet week. i got bored'],
+      online: ['{n} pages? are you okay? blink twice'],
+    },
+    wrapped_night_owl: {
+      all: ['{n} visits after midnight. go to bed', 'the moon is tired of seeing you', 'sleep schedule? never heard of her'],
+      wholesome: ['{n} late nights. please rest 🥺'],
+      dramatic: ['{n} nights. the darkness knows your name'],
+    },
+    wrapped_doomscroller: {
+      all: ['{n} doomscrolls. thumb of steel', 'the feed won. {n} times', 'you scrolled so far you found the end. jk'],
+      chaotic: ['{n} doomscrolls?? speedrun any%'],
+    },
+    wrapped_pop_up_predator: {
+      all: ['{n} pop-ups eaten. you are welcome', 'we ate {n} pop-ups. the internet fears us',
+        'cookie banners fear this one trick: me'],
+      unbothered: ['{n} pop-ups. light snack honestly'],
+    },
+    wrapped_add_to_cart: { all: ['{n}% shopping. your cart has a cart', 'add to cart is not a personality', "your bank called. it's worried"] },
+    wrapped_chronically_online: { all: ['{n}% social. the algorithm owns you', 'touch grass speedrun: failed', 'you live here now'] },
+    wrapped_thought_leader: { all: ['{n}% linkedin. thrilled to announce: help', 'agree? 👇 (please log off)', 'networked so hard you forgot to rest'] },
+    wrapped_corporate: { all: ['{n}% work. per my last email: rest', 'corporate baddie arc', 'circling back to: you need a break'] },
+    wrapped_dev_mode: { all: ['{n}% dev sites. works on my machine', 'git commit -m "send help"', 'stack overflow knows you by name'] },
+    wrapped_one_more_episode: { all: ['{n}% video. "just one more" x 400', 'autoplay is not a hobby', 'skip intro gang, daily'] },
+    wrapped_academic_weapon: { all: ['{n}% learning. academic weapon fr', 'brain so big it needs its own tab', 'the owl would be proud'] },
+    wrapped_prompt_goblin: { all: ['{n}% ai. who does the thinking now', 'prompt goblin behavior', 'you asked the robot everything. respect'] },
+    wrapped_news_junkie: { all: ['{n}% news. the news can wait, bestie', 'headline addict', 'you read everything except the room'] },
+    wrapped_gamer: { all: ['{n}% games. gg, now go outside', 'one more match turned into a week', 'gamer era, no notes'] },
+    wrapped_always_hungry: { all: ['{n}% food apps. me too, honestly', 'you ordered more than i ate', 'the delivery app misses you already'] },
+    wrapped_wanderlust: { all: ['{n}% travel sites. take me with you', 'out of office energy all week', 'packing list: me. obviously'] },
+    wrapped_rizz: { all: ['{n}% dating apps. the rizz is rizzing', 'swipe fatigue is real', 'red flags spotted: several'] },
+    wrapped_stonks: { all: ['{n}% finance. number go up?', 'buy high, sell low, cry', 'refresh the chart one more time. i dare you'] },
+    wrapped_explorer: { all: ['{n} new sites. the internet is your oyster', 'side quest: every website', 'explorer era. maps needed'] },
+    wrapped_lowkey: {
+      all: ['lowkey normal week. suspicious', 'no notes. weird flex but ok', 'balanced, as all things should be'],
+      dramatic: ['a normal week?? who ARE you'],
+    },
+  };
+
+  // Wrapped verdicts, by id. Site kinds that can define a week, and the verdict each gives.
+  const VERDICTS = {
+    touch_grass: 'offline icon', night_owl: '3am menace', doomscroller: 'doomscroll champion',
+    pop_up_predator: 'pop-up predator', add_to_cart: 'add-to-cart era', chronically_online: 'chronically online',
+    thought_leader: 'thought leader', corporate: 'corporate baddie', dev_mode: 'merge conflict era',
+    one_more_episode: 'one more episode', academic_weapon: 'academic weapon', prompt_goblin: 'prompt goblin',
+    news_junkie: 'news junkie', gamer: 'gamer era', always_hungry: 'always hungry', wanderlust: 'wanderlust era',
+    rizz: 'rizz researcher', stonks: 'stonks enjoyer', explorer: 'internet explorer', lowkey: 'lowkey normal',
+  };
+  const KIND_VERDICT = {
+    shopping: 'add_to_cart', social: 'chronically_online', reddit: 'chronically_online', linkedin: 'thought_leader',
+    work: 'corporate', mail: 'corporate', dev: 'dev_mode', video: 'one_more_episode', music: 'one_more_episode',
+    learn: 'academic_weapon', wiki: 'academic_weapon', ai: 'prompt_goblin', news: 'news_junkie', games: 'gamer',
+    food: 'always_hungry', travel: 'wanderlust', dating: 'rizz', finance: 'stonks',
   };
 
   // A different one each day, the same all day.
@@ -338,6 +393,28 @@
       const lines = [...new Set(voice.pool(event, vibe))];
       t = ((Math.trunc(t) % lines.length) + lines.length) % lines.length;
       return { event, kind, t, text: voice.fill(lines[t], { ...vars, host }) };
+    },
+
+    VERDICTS,
+
+    // Webling Wrapped: the verdict on a week (from pet.week / pet.lastWeek), and a roast of it in this vibe.
+    // t picks the line like roast() does. n is the number the verdict is about.
+    wrapped(w, vibe, t = 0) {
+      const num = (k) => Math.max(0, Math.trunc(Number(w?.[k]) || 0));
+      const visits = num('visits'), eaten = num('cookies') + num('popups');
+      const kinds = Object.entries(w?.kinds || {}).filter(([k]) => SITES[k]).sort((a, b) => b[1] - a[1]);
+      const top = kinds.length && visits ? { kind: kinds[0][0], share: Math.min(100, Math.round((kinds[0][1] / visits) * 100)) } : null;
+      const [verdict, n] =
+        visits < 15 ? ['touch_grass', visits]
+          : num('late') >= 10 ? ['night_owl', num('late')]
+            : num('doomscrolls') >= 5 ? ['doomscroller', num('doomscrolls')]
+              : eaten >= 30 ? ['pop_up_predator', eaten]
+                : top && top.share >= 35 && KIND_VERDICT[top.kind] ? [KIND_VERDICT[top.kind], top.share]
+                  : num('sites') >= 20 ? ['explorer', num('sites')]
+                    : ['lowkey', 0];
+      const lines = [...new Set(voice.pool(`wrapped_${verdict}`, vibe))];
+      t = ((Math.trunc(t) % lines.length) + lines.length) % lines.length;
+      return { verdict, label: VERDICTS[verdict], t, n, top, eaten, text: voice.fill(lines[t], { n }) };
     },
 
     mantra(pet, date = new Date()) {

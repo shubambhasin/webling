@@ -12,7 +12,12 @@
   const NAMES = ['Mochi', 'Pixel', 'Bean', 'Noodle', 'Tofu', 'Biscuit', 'Mango', 'Gizmo', 'Nugget', 'Boba',
     'Waffle', 'Sprout', 'Kiwi', 'Dot', 'Byte', 'Momo', 'Taco', 'Ziggy', 'Pudding', 'Crumb'];
 
-  const emptyWeek = (now) => ({ start: now, cookies: 0, popups: 0, sites: 0, boops: 0 });
+  // A week of stats, for the popup and Webling Wrapped. visits counts every page; sites only new ones; late is
+  // pages opened between midnight and 5am; kinds counts visits per kind of site (voice.js SITES). Aura gained
+  // is aura at the end minus auraStart. Saves from before Wrapped lack the newer fields; read them as 0.
+  const emptyWeek = (now, aura = 0) => ({
+    start: now, cookies: 0, popups: 0, sites: 0, boops: 0, visits: 0, late: 0, doomscrolls: 0, yeets: 0, kinds: {}, auraStart: aura,
+  });
 
   const model = {
     HOUR, DAY, WEEK, STAGES, NAMES,
@@ -102,8 +107,8 @@
     },
     rollWeek(p, now = Date.now()) {
       if (now - p.week.start < WEEK) return false;
-      p.lastWeek = p.week;
-      p.week = emptyWeek(now);
+      p.lastWeek = { ...p.week, auraEnd: p.aura || 0 };
+      p.week = emptyWeek(now, p.aura || 0);
       return true;
     },
   };

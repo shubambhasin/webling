@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { loadShared } from '../scripts/load-shared.mjs';
 
 // Run background.js against an in-memory chrome.* stand-in.
-function boot() {
+function boot(extra = {}) {
   const store = {}, listeners = [], installs = [], opened = [];
   const chrome = {
     storage: {
@@ -15,7 +15,7 @@ function boot() {
     runtime: { onMessage: { addListener: (f) => listeners.push(f) }, onInstalled: { addListener: (f) => installs.push(f) } },
     tabs: { create: (t) => opened.push(t.url) },
   };
-  loadShared(['shared/pet.js', 'shared/voice.js', 'background.js'], { chrome, structuredClone });
+  loadShared(['shared/pet.js', 'shared/voice.js', 'background.js'], { chrome, structuredClone, ...extra });
   const send = (msg) => new Promise((res) => listeners[0](msg, {}, res));
   return { send, store, opened, install: () => installs[0]({ reason: 'install' }) };
 }
@@ -133,4 +133,48 @@ test('a vibe can be picked at hatching or changed later; anything else lets the 
   await bg2.install();
   s = await bg2.send({ type: 'hatch', name: 'Bean', vibe: 'wholesome' });
   assert.equal(s.pet.vibe, 'wholesome');
+});
+
+test('the week counts pages, late nights, kinds of site, doomscrolls and yeets (for Wrapped)', async () => {
+  class Night extends Date { getHours() { return 3; } }
+  const bg = boot({ Date: Night });
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Owl' });
+  for (const host of ['linkedin.com', 'www.linkedin.com', 'amazon.in', 'my-blog.dev']) await bg.send({ type: 'visit', host });
+  assert.equal((await bg.send({ type: 'noticed', what: 'doomscroll' })).ok, true);
+  assert.equal((await bg.send({ type: 'noticed', what: 'doomscroll' })).ok, false, 'once a minute');
+  assert.equal((await bg.send({ type: 'noticed', what: 'anything' })).ok, false);
+  await bg.send({ type: 'aura', reason: 'thrown' });
+  const w = bg.store.pet.week;
+  assert.equal(w.visits, 4);
+  assert.equal(w.sites, 3);
+  assert.equal(w.late, 4, 'all at 3am');
+  assert.deepEqual({ ...w.kinds }, { linkedin: 2, shopping: 1 });
+  assert.equal(w.doomscrolls, 1);
+  assert.equal(w.yeets, 1);
+});
+
+test('a week rolls into lastWeek with the aura it gained; opening Wrapped marks it seen', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Bean' });
+  await bg.send({ type: 'ate', kind: 'popup' }); // +15 aura
+  bg.store.pet.week.start -= 8 * 864e5;
+  const s = await bg.send({ type: 'state' });
+  assert.equal(s.pet.lastWeek.popups, 1);
+  assert.equal(s.pet.lastWeek.auraEnd - s.pet.lastWeek.auraStart, 15);
+  assert.equal(s.pet.week.popups, 0);
+  assert.equal(s.pet.week.auraStart, s.pet.aura);
+  assert.equal(s.pet.lastWeek.seen, undefined);
+  assert.equal((await bg.send({ type: 'wrappedSeen' })).pet.lastWeek.seen, true);
+});
+
+test('weeks saved before Wrapped (no visits, kinds or aura) still roll and count', async () => {
+  const bg = boot();
+  await bg.install();
+  await bg.send({ type: 'hatch', name: 'Old' });
+  bg.store.pet.week = { start: Date.now(), cookies: 2, popups: 0, sites: 1, boops: 0 };
+  await bg.send({ type: 'visit', host: 'reddit.com' });
+  assert.equal(bg.store.pet.week.visits, 1);
+  assert.equal(bg.store.pet.week.kinds.reddit, 1);
 });

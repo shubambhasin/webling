@@ -6,7 +6,9 @@ const M = WL.model;
 const DEFAULT_SETTINGS = { presence: true, eat: true, noEat: [] };
 const MAX_PASSPORT = 5000;
 const PAGE_AURA = new Set(['landing', 'thrown', 'poke_spam']);
-const auraAt = {};
+const NOTICED = new Set(['doomscroll']);
+const auraAt = {}, noticedAt = {};
+const bump = (o, k, n = 1) => (o[k] = (o[k] || 0) + n);
 
 async function load() {
   const s = await chrome.storage.local.get(['pet', 'settings', 'passport']);
@@ -61,6 +63,10 @@ const handlers = {
   visit: ({ host }) => mutate((s) => {
     host = String(host || '').toLowerCase().replace(/^www\./, '');
     if (!s.pet.hatched || !host) return { isNew: false, visits: 0 };
+    const w = s.pet.week, kind = WL.voice.siteKind(host);
+    bump(w, 'visits');
+    if (new Date().getHours() < 5) bump(w, 'late');
+    if (kind) bump((w.kinds ||= {}), kind);
     let entry = s.passport[host];
     if (typeof entry === 'number') entry = { t: entry, n: 1 }; // saves from before visit counts
     if (entry) {
@@ -119,7 +125,25 @@ const handlers = {
     const now = Date.now();
     if (now - (auraAt[reason] || 0) < 8000) return { delta: 0 };
     auraAt[reason] = now;
-    return mutate((s) => ({ delta: M.addAura(s.pet, reason), ...view(s) }));
+    return mutate((s) => {
+      if (reason === 'thrown') bump(s.pet.week, 'yeets');
+      return { delta: M.addAura(s.pet, reason), ...view(s) };
+    });
+  },
+
+  // The popup opened last week's Wrapped, so it stops being "new".
+  wrappedSeen: () => mutate((s) => {
+    if (s.pet.lastWeek) s.pet.lastWeek.seen = true;
+  }),
+
+  // Things the page noticed that Wrapped counts (doomscrolling), at most once a minute each.
+  noticed: ({ what }) => {
+    if (!NOTICED.has(what) || Date.now() - (noticedAt[what] || 0) < 60e3) return { ok: false };
+    noticedAt[what] = Date.now();
+    return mutate((s) => {
+      bump(s.pet.week, `${what}s`);
+      return { ok: true };
+    });
   },
 
   snack: () => mutate((s) => {

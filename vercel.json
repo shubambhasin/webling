@@ -4,7 +4,7 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "functions": {
-    "api/roast*.mjs": {
+    "api/[!_]*.mjs": {
       "includeFiles": "{extension/shared/**,api/_fonts/**}"
     }
   },
@@ -16,6 +16,14 @@
     {
       "source": "/r/:domain",
       "destination": "/api/roast?domain=:domain"
+    },
+    {
+      "source": "/w/image.png",
+      "destination": "/api/wrapped-image"
+    },
+    {
+      "source": "/w",
+      "destination": "/api/wrapped"
     }
   ],
   "headers": [

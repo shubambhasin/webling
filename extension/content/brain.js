@@ -147,6 +147,7 @@
         scrolled = scrolled.filter(([t]) => now - t < 15e3);
         if (scrolled.reduce((s, [, d]) => s + d, 0) > innerHeight * 6) {
           scrolled = [];
+          WL.bg({ type: 'noticed', what: 'doomscroll' });
           brain.remark('doomscroll', {}, { every: 180e3 });
         }
       }, { passive: true });

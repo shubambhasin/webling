@@ -153,3 +153,29 @@ test('a roast is the same take for the same host, vibe and number, and every num
     }
   }
 });
+
+test('Wrapped: each kind of week gets its verdict, and the take is stable', () => {
+  const week = (o) => ({ visits: 200, cookies: 0, popups: 0, sites: 0, late: 0, doomscrolls: 0, kinds: {}, ...o });
+  const verdict = (o) => V.wrapped(week(o), 'chaotic').verdict;
+  assert.equal(verdict({ visits: 3 }), 'touch_grass');
+  assert.equal(verdict({ late: 12 }), 'night_owl');
+  assert.equal(verdict({ doomscrolls: 6 }), 'doomscroller');
+  assert.equal(verdict({ cookies: 20, popups: 15 }), 'pop_up_predator');
+  assert.equal(verdict({ kinds: { shopping: 90, social: 10 } }), 'add_to_cart');
+  assert.equal(verdict({ kinds: { linkedin: 80 } }), 'thought_leader');
+  assert.equal(verdict({ kinds: { search: 150 } }), 'lowkey', 'search is everyone, not a personality');
+  assert.equal(verdict({ kinds: { shopping: 30 } }), 'lowkey', 'under a third is not an era');
+  assert.equal(verdict({ sites: 25 }), 'explorer');
+  assert.equal(verdict({}), 'lowkey');
+  assert.equal(V.wrapped({}, 'online').verdict, 'touch_grass', 'an empty or old week works');
+
+  const r = V.wrapped(week({ late: 17 }), 'dramatic', 5);
+  assert.deepEqual(V.wrapped(week({ late: 17 }), 'dramatic', 5), r);
+  assert.equal(r.n, 17);
+  assert.equal(r.label, V.VERDICTS.night_owl);
+  const top = V.wrapped(week({ kinds: { shopping: 90 } }), 'chaotic');
+  assert.deepEqual({ ...top.top }, { kind: 'shopping', share: 45 });
+  for (const id of Object.keys(V.VERDICTS)) {
+    for (const vibe of V.VIBE_IDS) assert.ok(V.pool(`wrapped_${id}`, vibe).length, `wrapped_${id} ${vibe}`);
+  }
+});
