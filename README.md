@@ -42,8 +42,8 @@ Add `?timers` to drive animation from timers (for automated checks in background
 npm test
 ```
 
-- `npm run test:unit`: the art, life rules, the voice, background state handling and the presence server
-  (seconds). `voice.test` checks every event the code names has lines for every vibe, every line fits
+- `npm run test:unit`: the art, life rules, the voice, background state handling, the store kit and the
+  presence server (seconds). `voice.test` checks every event the code names has lines for every vibe, every line fits
   a bubble, fills its placeholders and stays PG, and that site detection can't be fooled by lookalike
   domains.
 - `npm run test:e2e`: real headless Chrome, driven over the DevTools protocol with no dependencies
@@ -69,6 +69,7 @@ npm test
 | `extension/content/presence.js` | other people's weblings on the same page, and boops |
 | `extension/popup/` | hatching, the pet's home, settings, the share card |
 | `server/` | presence relay; stores nothing |
+| `store/` | the Chrome Web Store kit: listing copy and privacy answers, images, and the mock pages they're shot on |
 
 ## How the pieces behave
 
@@ -127,13 +128,20 @@ extension zip and a generated `og.png`. Vercel runs the same build (see `vercel.
 npm run build:site && node scripts/dev-server.mjs public
 ```
 
-## Before publishing to the Chrome Web Store
+## Publishing to the Chrome Web Store
 
-- Deploy `server/` to a host with WebSockets (Fly, Render, Railway; not Vercel) behind TLS and set
-  `presenceUrl` in `extension/shared/config.js` to the `wss://` address. Until then presence is off.
+Everything the dashboard asks for is in [`store/listing.md`](store/listing.md): the description, category,
+permission justifications, privacy-practices answers and a pre-submit checklist. The privacy policy is
+`site/privacy.html`, live at <https://webling.vercel.app/privacy>.
+
 - `npm run zip` writes `dist/webling-<version>.zip` and notes when presence is off.
-- Chrome Web Store: the listing needs a privacy section. It's honest and short: no browsing history
-  leaves the device. Visited hostnames are stored locally for the "sites explored" count only.
+- `npm run store` remakes `store/assets/` (five 1280×800 screenshots, the 440×280 and 1400×560 promo tiles)
+  by running the real extension on the mock pages in `store/` in headless Chrome. `npm run store 3` redoes
+  one. `store.test` checks the sizes, and that the listing and privacy policy still match the manifest
+  and whether presence is on.
+- Presence: deploy `server/` to a host with WebSockets (Fly, Render, Railway; not Vercel) behind TLS and set
+  `presenceUrl` in `extension/shared/config.js` to the `wss://` address. Until then presence is off, which is
+  what the listing and policy say. Turning it on means updating both (the test will remind you).
 
 ## Known gaps
 

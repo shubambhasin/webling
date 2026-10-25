@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fernhouse</title>
+  <style>
+    body { margin: 0; font: 14px/1.5 system-ui, sans-serif; color: #1f2a1f; background: #f4f1ea; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 10px 28px; background: #fff; border-bottom: 1px solid #e3ddd0; }
+    header b { font: 800 19px Georgia, serif; color: #2f5d3a; }
+    header nav { display: flex; gap: 16px; font-size: 12px; color: #666; }
+    main { display: grid; grid-template-columns: 200px 1fr; gap: 26px; max-width: 540px; margin: 0 auto; padding: 22px 20px 140px; }
+    .photo { height: 210px; background: linear-gradient(160deg, #cfe3c6, #9dc48f); border-radius: 10px; position: relative; overflow: hidden; }
+    .photo::before { content: ''; position: absolute; left: 60px; bottom: 0; width: 80px; height: 60px; background: #c8744b; border-radius: 6px 6px 14px 14px; }
+    .photo::after { content: ''; position: absolute; left: 20px; bottom: 54px; width: 160px; height: 130px;
+      background: radial-gradient(ellipse 34px 46px at 30% 55%, #2f6d3a 98%, transparent), radial-gradient(ellipse 34px 50px at 70% 50%, #3f8a4b 98%, transparent),
+        radial-gradient(ellipse 30px 44px at 50% 35%, #357a42 98%, transparent), linear-gradient(#2a5e34, #2a5e34) 50% 100% / 4px 60px no-repeat; }
+    h1 { font: 800 26px/1.15 Georgia, serif; margin: 0 0 6px; }
+    .price { font-size: 20px; font-weight: 800; margin: 0 0 10px; }
+    p { margin: 0 0 10px; color: #4a554a; }
+    .buy { border: 0; background: #2f5d3a; color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 6px; }
+    .nl-backdrop { position: fixed; inset: 0; background: rgba(20, 30, 20, .5); z-index: 9998; }
+    .nl-modal { position: fixed; z-index: 9999; left: 50%; top: 62%; transform: translate(-50%, -50%); width: 300px; text-align: center;
+      background: #fff6e8; padding: 20px 22px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+    .nl-modal h3 { margin: 0 0 4px; font: 800 22px Georgia, serif; color: #c0392b; }
+    .nl-modal p { margin: 0 0 12px; }
+    .nl-modal input { width: 62%; padding: 7px; border: 1px solid #ccc; }
+    .nl-modal button { padding: 8px 12px; border: 0; background: #c0392b; color: #fff; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header><b>Fernhouse</b><nav><span>Plants</span><span>Pots</span><span>Sale</span><span>Cart (0)</span></nav></header>
+  <main>
+    <div class="photo" aria-hidden="true"></div>
+    <div>
+      <h1>Monstera in a terracotta pot</h1>
+      <div class="price">$34.00</div>
+      <p>Big leaves, low effort. Happy in bright, indirect light. Forgives you for forgetting to water it.</p>
+      <p>Ships in 2 to 3 days, in a box that is mostly air.</p>
+      <button class="buy">Add to cart</button>
+    </div>
+  </main>
+  <script>
+    setTimeout(() => {
+      const back = document.createElement('div');
+      back.className = 'nl-backdrop';
+      const modal = document.createElement('div');
+      modal.className = 'nl-modal';
+      modal.setAttribute('role', 'dialog');
+      modal.innerHTML = '<h3>WAIT! Don\'t go!</h3><p>Join our newsletter and get 15% off your first order.</p><input placeholder="you@email.com" aria-label="Email"> <button>Subscribe</button>';
+      document.body.append(back, modal);
+      document.body.style.overflow = 'hidden';
+    }, 1200);
+  </script>
+  <script src="scene.js"></script>
+</body>
+</html>

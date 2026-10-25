@@ -202,6 +202,15 @@ h3 { font: 800 19px/1.25 var(--mono); margin: 0 0 8px; }
 .privacy li { padding: 10px 0 10px 26px; position: relative; color: var(--muted); }
 .privacy li::before { content: ''; position: absolute; left: 0; top: 19px; width: 10px; height: 10px; background: var(--cyan); }
 
+/* ---- plain documents (privacy policy) ---- */
+.doc { max-width: 46em; margin: 0 auto; padding: 24px 20px 40px; }
+.doc h1 { font: 900 clamp(34px, 6vw, 52px)/1.05 var(--sans); margin: 0 0 8px; }
+.doc h2 { font: 800 22px var(--sans); margin: 36px 0 8px; color: var(--acid); }
+.doc p, .doc li { color: var(--muted); }
+.doc strong { color: var(--text); }
+.doc ul { padding-left: 20px; }
+.doc li { padding: 4px 0; }
+
 footer { max-width: 1120px; margin: 0 auto; padding: 40px 20px 140px; color: var(--muted); font: 14px var(--mono); }
 footer .wordmark { display: block; max-width: 100%; margin-bottom: 18px; }
 

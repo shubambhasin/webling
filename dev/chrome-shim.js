@@ -1,7 +1,9 @@
 // Just enough of the chrome.* extension API to run the background, popup and content scripts in
 // one ordinary page, for development without reloading the extension. Not shipped.
 (() => {
-  const KEY = 'webling-dev-storage';
+  // ?store=name keeps a separate saved state, so several pets can live side by side on one origin.
+  const params = new URLSearchParams(location.search);
+  const KEY = 'webling-dev-storage' + (params.get('store') ? `:${params.get('store')}` : '');
   const read = () => JSON.parse(localStorage.getItem(KEY) || '{}');
   const changed = [], messages = [], installed = [];
   const clone = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
@@ -44,7 +46,7 @@
 
   // ?timers drives animation from timers, for automated checks in a background tab where
   // requestAnimationFrame is paused.
-  if (new URLSearchParams(location.search).has('timers')) {
+  if (params.has('timers')) {
     globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16);
     globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
   }

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webling privacy policy</title>
+  <meta name="description" content="What the Webling extension keeps, where it keeps it, and what it never sends.">
+  <meta name="theme-color" content="#0d0a17">
+  <link rel="icon" href="/ext/icons/32.png">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/" aria-label="Webling home"><canvas class="wordmark" data-text="WEBLING" data-cell="3" aria-hidden="true"></canvas></a>
+    <nav aria-label="Site"><a href="/">Back to the pets</a></nav>
+  </header>
+
+  <main class="doc">
+    <h1>Privacy policy</h1>
+    <p class="fine">Webling browser extension and webling.vercel.app · last updated 25 October 2026</p>
+
+    <p><strong>The short version:</strong> your webling lives on your computer. It doesn't collect your browsing,
+      it doesn't phone home, and there are no accounts, analytics, ads or trackers.</p>
+
+    <h2>What the extension keeps, on your device</h2>
+    <ul>
+      <li><strong>Your pet:</strong> its name, colours, vibe, growth, aura, hunger and stats (like how many cookie banners it has eaten).</li>
+      <li><strong>Your settings:</strong> whether eating is on, and the sites where you've switched it off.</li>
+      <li><strong>Sites it has visited:</strong> the hostname (like <code>example.com</code>, never the full address) with a visit count and the last visit time, kept for the "sites explored" count and so the pet can greet sites it knows. Capped at 5,000 sites.</li>
+    </ul>
+    <p>All of this is stored with the browser's own extension storage (<code>chrome.storage.local</code>) and never
+      leaves your device. Uninstalling the extension deletes it.</p>
+
+    <h2>What it does on the pages you visit</h2>
+    <p>To walk on a page, the pet looks at where lines of text are. To eat cookie banners and pop-ups, it looks at
+      elements that cover the page and the text they show, then hides them with styles. It never clicks anything,
+      never reads or sends what you type into forms, and never blocks or changes network requests. It reads the
+      page's address to tell what kind of site you're on (so it can have opinions about LinkedIn). All of this
+      happens on your device; none of it is recorded or sent anywhere.</p>
+
+    <h2>Meeting other weblings</h2>
+    <p>The extension has an optional feature for seeing other people's pets on the same page. It is
+      <strong>switched off</strong> in the current version and makes no network connections. If it's turned on in a
+      future version, this policy will be updated first, and it will share only: a scrambled ID of the page
+      (a SHA-256 hash of its origin and path, never the address itself), and your pet's name, colour and stage.
+      It will stay off in incognito windows, on pages with a password box, and on mail, banking, payment and
+      sign-in sites, and you'll be able to switch it off.</p>
+
+    <h2>Sharing</h2>
+    <p>The share card is made on your device. It's only posted if you post it, using the "Post on X" button or
+      by saving the image yourself.</p>
+
+    <h2>This website</h2>
+    <p>webling.vercel.app runs a demo pet in your browser and keeps it in your browser's local storage. The site
+      sets no cookies and has no analytics. It's hosted on Vercel, which keeps standard server logs (such as IP
+      addresses) to run and protect the service; see Vercel's privacy policy.</p>
+
+    <h2>Who we share data with</h2>
+    <p>Nobody. We don't sell, rent or transfer any data, because we don't collect any.</p>
+
+    <h2>Changes and contact</h2>
+    <p>If this policy changes, the new version will be posted here with a new date. Questions or concerns:
+      <a href="https://github.com/shubambhasin/webling/issues">open an issue on GitHub</a>.</p>
+  </main>
+
+  <footer>
+    <p>This page sets no cookies either.</p>
+  </footer>
+  <script src="/wordmark.js"></script>
+</body>
+</html>

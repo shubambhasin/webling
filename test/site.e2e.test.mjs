@@ -184,10 +184,10 @@ test('a returning visitor keeps their pet', { skip }, async () => {
   }
 });
 
-test('the download and preview image are served', { skip }, async () => {
-  for (const [path, type] of [['/webling-extension.zip', 'application/zip'], ['/og.png', 'image/png']]) {
+test('the download, preview image and privacy policy are served', { skip }, async () => {
+  for (const [path, type] of [['/webling-extension.zip', 'application/zip'], ['/og.png', 'image/png'], ['/privacy.html', 'text/html']]) {
     const r = await fetch(base + path);
     assert.equal(r.status, 200, path);
-    assert.equal(r.headers.get('content-type'), type);
+    assert.ok(r.headers.get('content-type').startsWith(type), `${path}: ${r.headers.get('content-type')}`);
   }
 });
