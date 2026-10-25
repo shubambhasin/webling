@@ -263,12 +263,13 @@
     draw(ctx, dpr) {
       const c = WL.art.CLIPS[this.clip] || WL.art.CLIPS.idle;
       const frame = Math.floor(this.clipT * c.fps) % c.frames.length;
-      const img = WL.art.bake(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0);
+      let img = WL.art.bake(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0), pad = 0;
+      if (WL.config.halo) ({ img, pad } = WL.art.bakeHalo(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0));
       const bob = this.clip === 'idle' && Math.floor(this.clipT * 2) % 2 ? PX
         : this.clip === 'dance' && frame === 1 ? -PX * 2 : 0;
       const left = this.sx - this.w / 2, top = this.sy - this.h;
       ctx.globalAlpha = this.ghost ? 0.88 : 1;
-      ctx.drawImage(img, Math.round(left * dpr), Math.round((top + bob) * dpr));
+      ctx.drawImage(img, Math.round(left * dpr) - pad, Math.round((top + bob) * dpr) - pad);
       ctx.globalAlpha = 1;
       this.hit.style.width = this.w + 'px';
       this.hit.style.height = this.h + 'px';

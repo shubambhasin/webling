@@ -112,7 +112,13 @@ payment and sign-in hosts. Pets connect only while the tab is visible.
 
 ## The site
 
-`site/` is the landing page at <https://webling.vercel.app>. `npm run build:site` assembles it into
+`site/` is the landing page at <https://webling.vercel.app>, themed "the internet at 3am". It runs the
+real extension on itself: every visitor hatches a pet, the page buries itself in pop-up hell (cookie
+banner, newsletter, notifications, a flash sale) and the pet eats its way out. Then: "It has takes"
+(pick a place or roast any domain, in any vibe), a three-question vibe check whose result can become
+your pet's vibe and be shared, and the aura ladder. Reduced motion skips the chaos.
+
+`npm run build:site` assembles it into
 `public/`: the page, the extension's scripts (so the page runs the real extension on itself), the
 extension zip and a generated `og.png`. Vercel runs the same build (see `vercel.json`) on every push:
 `main` deploys to production, other branches get preview URLs. To preview the build locally:

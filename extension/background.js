@@ -1,6 +1,6 @@
 // Owns the pet's saved state. Content scripts and the popup send messages here, and changes are
 // applied one at a time so several open tabs never overwrite each other.
-if (typeof importScripts === 'function') importScripts('shared/pet.js');
+if (typeof importScripts === 'function') importScripts('shared/pet.js', 'shared/voice.js');
 
 const M = WL.model;
 const DEFAULT_SETTINGS = { presence: true, eat: true, noEat: [] };
@@ -37,13 +37,20 @@ const view = (s) => ({ pet: s.pet, settings: s.settings, sites: Object.keys(s.pa
 const handlers = {
   state: () => mutate(() => {}),
 
-  hatch: ({ name, presence }) => mutate((s) => {
+  // vibe is optional: one of the five, or anything else to let the egg decide (from its seed).
+  hatch: ({ name, presence, vibe }) => mutate((s) => {
     if (!s.pet.hatched) {
       s.pet.hatched = true;
       s.pet.hatchedAt = Date.now();
     }
     s.pet.name = M.cleanName(name) || s.pet.name || M.randomName();
+    if (WL.voice.VIBES[vibe]) s.pet.vibe = vibe;
     s.settings.presence = presence !== false;
+  }),
+
+  // Change vibe later (the site's vibe check can do this).
+  setVibe: ({ vibe }) => mutate((s) => {
+    if (WL.voice.VIBES[vibe]) s.pet.vibe = vibe;
   }),
 
   rename: ({ name }) => mutate((s) => {

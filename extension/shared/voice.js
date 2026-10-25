@@ -141,7 +141,7 @@
       wholesome: ['all better now 💕'],
     },
     ate_accept_all: { all: ['"accept all"? accept THIS', 'accept all? i decline all'] },
-    ate_discount: { all: ['10% off? the audacity', 'i want 100% off pop-ups'] },
+    ate_discount: { all: ['a discount? the audacity', 'i want 100% off pop-ups', 'sale ends never, babe'] },
     ate_newsletter: { all: ["your newsletter could've been a tweet", 'subscribe? unsubscribe.'] },
     spat: {
       all: ['fine. it was mid anyway', 'ptooey. happy now?', 'you wanted that?? ok', 'respectfully, why'],

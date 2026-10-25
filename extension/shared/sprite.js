@@ -120,5 +120,28 @@
     return c;
   }
 
-  WL.art = { BODY, EGG, CLIPS, rows, size, hueOf, palette, hex, bake };
+  // The same frame with a light outline around it, for dark backgrounds. Returns { img, pad }:
+  // draw it pad pixels up and left of where the plain frame would go.
+  function bakeHalo(stage, clip, i, seed, scale, flip = false, color = '#fffdf5') {
+    const key = `halo|${stage}|${clip}|${i}|${seed}|${scale}|${flip}|${color}`;
+    let h = cache.get(key);
+    if (h) return h;
+    const art = bake(stage, clip, i, seed, scale, flip);
+    const pad = Math.max(1, Math.round(scale / 2));
+    const c = document.createElement('canvas');
+    c.width = art.width + pad * 2;
+    c.height = art.height + pad * 2;
+    const g = c.getContext('2d');
+    for (const [dx, dy] of [[0, 0], [2, 0], [0, 2], [2, 2], [1, 0], [0, 1], [2, 1], [1, 2]]) g.drawImage(art, dx * pad, dy * pad);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = color;
+    g.fillRect(0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'source-over';
+    g.drawImage(art, pad, pad);
+    h = { img: c, pad };
+    cache.set(key, h);
+    return h;
+  }
+
+  WL.art = { BODY, EGG, CLIPS, rows, size, hueOf, palette, hex, bake, bakeHalo };
 })();

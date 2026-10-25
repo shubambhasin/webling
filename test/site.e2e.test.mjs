@@ -11,8 +11,9 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const skip = chromePath ? false : 'no Chrome found (set CHROME_PATH)';
 let server, chrome, base;
 
-const BANNER_GONE = `(() => { const b = document.querySelector('#onetrust-banner-sdk'); return !!b && b.style.display === 'none'; })()`;
+const SNACKS_UP = `[...document.querySelectorAll('[data-snack]')].filter((s) => s.isConnected && getComputedStyle(s).display !== 'none').length`;
 const stats = (page) => page.eval(`chrome.runtime.sendMessage({ type: 'state' }).then((s) => s.pet.stats)`);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 before(async () => {
   if (skip) return;
@@ -31,72 +32,141 @@ after(async () => {
   await server?.close();
 });
 
-test('first visit: a webling hatches and eats the slide-in cookie banner', { skip }, async () => {
-  const page = await chrome.open(`${base}/`);
+// A page with pop-up hell already cleared (by the pet, or by nuking it when we're not testing that).
+async function calmPage() {
+  const p = await chrome.open(`${base}/`);
+  await p.until('globalThis.WL?.me && 1', 10000, 'pet loaded');
+  await p.until(`document.querySelectorAll('[data-snack]').length >= 4`, 5000, 'pop-up hell');
+  await p.click('#nuke');
+  await p.until(`${SNACKS_UP} === 0 && document.querySelector('#hell-status').hidden`, 3000, 'nuked');
+  return p;
+}
+
+test('first visit: the page buries itself in pop-ups and the new pet eats its way out', { skip }, async () => {
+  const p = await chrome.open(`${base}/`);
   try {
-    const name = await page.until(`globalThis.WL?.me && WL.state.pet.name`, 10000, 'pet hatched');
-    assert.match(await page.eval(`document.querySelector('#hello').textContent`), new RegExp(name));
-    await page.until(BANNER_GONE, 15000, 'cookie banner eaten');
-    assert.equal((await stats(page)).cookies, 1);
-    assert.equal(await page.until(`document.querySelector('#n-cookies').textContent === '1' && '1'`, 3000, 'scoreboard'), '1');
-    assert.deepEqual(page.errors, []);
+    const name = await p.until(`globalThis.WL?.me && WL.state.pet.name`, 10000, 'pet hatched');
+    await p.until(`${SNACKS_UP} === 4`, 5000, 'four snacks: cookie banner, newsletter, notifications, sale');
+    assert.equal(await p.eval(`document.querySelector('#hell-status').hidden`), false, 'status bar up');
+    await p.until(`document.querySelector('#hell-status').hidden`, 45000, 'pop-up hell cleared by the pet');
+    assert.equal(await p.eval(SNACKS_UP), 0);
+    assert.match(await p.eval(`document.querySelector('#hello').textContent`), new RegExp(`${name} cleared pop-up hell in [\\d.]+s`));
+    const s = await stats(p);
+    assert.equal(s.cookies, 1);
+    assert.equal(s.popups, 3);
+    assert.equal(await p.eval(`document.querySelector('#pet-eaten').textContent`), '4', 'hero card counts the snacks');
+    assert.notEqual(await p.eval(`getComputedStyle(document.body).overflow`), 'hidden', 'scrolling unlocked');
+    assert.deepEqual(p.errors, []);
   } finally {
-    page.close();
+    p.close();
   }
 });
 
-test('"Another cookie banner" brings a new banner and it gets eaten too, every time', { skip }, async () => {
-  const page = await chrome.open(`${base}/`);
+test('"nuke them" clears pop-up hell at once', { skip }, async () => {
+  const p = await calmPage();
   try {
-    await page.until(BANNER_GONE, 15000, 'first banner eaten');
-    for (let i = 2; i <= 4; i++) {
-      await page.click('#rebanner');
-      await page.until(`!!document.querySelector('#onetrust-banner-sdk.in') && document.querySelector('#onetrust-banner-sdk').style.display !== 'none'`, 3000, `banner ${i} shown`);
-      await page.until(BANNER_GONE, 12000, `banner ${i} eaten`);
+    assert.equal(await p.eval(`document.querySelectorAll('.snack-backdrop').length`), 0);
+  } finally {
+    p.close();
+  }
+});
+
+test('"Summon more chaos" brings a banner and a pop-up, and both get eaten, every time', { skip }, async () => {
+  const p = await calmPage();
+  try {
+    for (let round = 1; round <= 2; round++) {
+      await p.click('#more-chaos');
+      await p.until(`${SNACKS_UP} >= 1`, 2000, `round ${round}: banner arrives`);
+      await p.until(`document.querySelector('.snack-win') && ${SNACKS_UP} === 0`, 25000, `round ${round}: both eaten`);
     }
-    assert.ok((await stats(page)).cookies >= 4);
-    assert.deepEqual(page.errors, []);
+    assert.deepEqual(p.errors, []);
   } finally {
-    page.close();
+    p.close();
   }
 });
 
-test('"Another cookie banner" pressed while the pet is still eating the first one', { skip }, async () => {
-  const page = await chrome.open(`${base}/`);
+test('regression: summoned banners slide in even when animation frames are throttled', { skip }, async () => {
+  const p = await calmPage();
   try {
-    await page.until(`WL.me?.mode === 'eat'`, 15000, 'pet starts eating the first banner');
-    await page.click('#rebanner');
-    await page.until(BANNER_GONE, 15000, 'replacement banner eaten');
+    await p.eval('window.requestAnimationFrame = () => 0; true');
+    await p.click('#more-chaos');
+    await p.until(`(() => { const b = [...document.querySelectorAll('.snack-cookie')].pop(); return b && b.getBoundingClientRect().top < innerHeight - 20; })()`, 2000, 'banner slid into view');
   } finally {
-    page.close();
+    p.close();
   }
 });
 
-test('regression: "Another cookie banner" shows a banner even when animation frames are throttled', { skip }, async () => {
-  const page = await chrome.open(`${base}/`);
+test('takes: each place gets a take in the chosen vibe', { skip }, async () => {
+  const p = await calmPage();
   try {
-    await page.until(BANNER_GONE, 15000, 'first banner eaten');
-    // What a background tab or a throttled panel does: animation frame callbacks stop arriving.
-    await page.eval('window.requestAnimationFrame = () => 0; true');
-    await page.click('#rebanner');
-    await page.until(`(() => { const b = document.querySelector('#onetrust-banner-sdk'); return b && b.getBoundingClientRect().top < innerHeight - 20; })()`, 2000, 'banner slid into view');
+    const inPool = (event, vibe) => p.eval(`WL.voice.pool('${event}', '${vibe}').includes(document.querySelector('#take-text').textContent)`);
+    const myVibe = await p.eval('WL.voice.vibeOf(WL.state.pet)');
+    await p.click('#take-chips button'); // LinkedIn
+    assert.ok(await inPool('site_linkedin', myVibe), 'LinkedIn take in my vibe');
+    await p.click('#vibe-chips button[data-vibe="dramatic"]');
+    assert.ok(await inPool('site_linkedin', 'dramatic'), 'same place, dramatic vibe');
+    assert.equal(await p.eval(`document.querySelector('#vibe-chips [aria-pressed="true"]').dataset.vibe`), 'dramatic');
   } finally {
-    page.close();
+    p.close();
   }
 });
 
-test('"Summon a pop-up": the pop-up, its backdrop and scroll lock all get eaten', { skip }, async () => {
-  const page = await chrome.open(`${base}/`);
+test('roast any site: recognises domains, and tells you when it is not one', { skip }, async () => {
+  const p = await calmPage();
   try {
-    await page.until(BANNER_GONE, 15000, 'banner eaten first');
-    await page.click('#summon');
-    await page.until(`!!document.querySelector('.nl-modal')`, 6000, 'pop-up appears after the countdown');
-    await page.until(`document.querySelector('.nl-modal').style.display === 'none'`, 12000, 'pop-up eaten');
-    assert.equal(await page.eval(`document.querySelector('.nl-backdrop').style.display`), 'none');
-    assert.notEqual(await page.eval(`getComputedStyle(document.body).overflow`), 'hidden');
-    assert.equal((await stats(page)).popups, 1);
+    const roast = async (text) => {
+      await p.eval(`document.querySelector('#roast-input').value = ${JSON.stringify(text)}; document.querySelector('#roast button').click(); true`);
+      return p.eval(`document.querySelector('#take-text').textContent`);
+    };
+    const vibe = await p.eval(`document.querySelector('#vibe-chips [aria-pressed="true"]').dataset.vibe`);
+    const shopping = await roast('https://www.amazon.in/some/product?id=1');
+    assert.ok(await p.eval(`WL.voice.pool('site_shopping', '${vibe}').includes(${JSON.stringify(shopping)})`), shopping);
+    const fresh = await roast('my-cool-blog.dev');
+    assert.ok(await p.eval(`WL.voice.pool('arrive_new', '${vibe}').map((l) => WL.voice.fill(l, { host: 'my-cool-blog.dev' })).includes(${JSON.stringify(fresh)})`), fresh);
+    assert.equal(await roast('lol'), "that's not a website bestie");
   } finally {
-    page.close();
+    p.close();
+  }
+});
+
+test('vibe check: three answers give a vibe, and it can become your pet’s vibe', { skip }, async () => {
+  const p = await calmPage();
+  try {
+    for (let i = 0; i < 3; i++) await p.eval(`document.querySelector('#quiz .answers button[data-vibe="wholesome"]').click(); true`);
+    assert.equal(await p.eval(`document.querySelector('#quiz').dataset.result`), 'wholesome');
+    assert.match(await p.eval(`document.querySelector('#share-vibe').href`), /^https:\/\/x\.com\/intent\/post\?text=I%20got%20Wholesome/);
+    await p.click('#adopt');
+    await p.until(`chrome.runtime.sendMessage({ type: 'state' }).then((s) => s.pet.vibe === 'wholesome')`, 3000, 'saved');
+    assert.equal(await p.eval(`document.querySelector('#pet-vibe').textContent`), 'Wholesome');
+    await p.eval(`document.querySelector('#retake').click(); true`);
+    assert.match(await p.eval(`document.querySelector('#quiz .step').textContent`), /question 1 of 3/);
+  } finally {
+    p.close();
+  }
+});
+
+test('the aura ladder marks where your pet is', { skip }, async () => {
+  const p = await calmPage();
+  try {
+    assert.equal(await p.eval(`document.querySelectorAll('#ladder li').length`), 6);
+    const tier = await p.eval('WL.model.auraTier(WL.state.pet)');
+    assert.equal(await p.eval(`document.querySelector('#ladder li.here b').textContent`), tier);
+  } finally {
+    p.close();
+  }
+});
+
+test('reduced motion: no pop-up hell, just the page', { skip }, async () => {
+  const p = await chrome.open('about:blank');
+  try {
+    await p.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    await p.send('Page.navigate', { url: `${base}/` });
+    await p.until('globalThis.WL?.me && 1', 10000, 'pet loaded');
+    await sleep(1500);
+    assert.equal(await p.eval(`document.querySelectorAll('[data-snack]').length`), 0);
+    assert.equal(await p.eval(`document.querySelector('#hell-status').hidden`), true);
+  } finally {
+    p.close();
   }
 });
 
@@ -104,13 +174,13 @@ test('a returning visitor keeps their pet', { skip }, async () => {
   const first = await chrome.open(`${base}/`);
   const name = await first.until(`globalThis.WL?.me && WL.state.pet.name`, 10000, 'pet hatched');
   first.close();
-  const page = await chrome.open(`${base}/`);
+  const p = await chrome.open(`${base}/`);
   try {
-    await page.until(`globalThis.WL?.me`, 10000, 'pet loaded');
-    assert.equal(await page.eval(`WL.state.pet.name`), name);
-    assert.match(await page.eval(`document.querySelector('#hello').textContent`), /Welcome back/);
+    await p.until(`globalThis.WL?.me`, 10000, 'pet loaded');
+    assert.equal(await p.eval(`WL.state.pet.name`), name);
+    assert.match(await p.eval(`document.querySelector('#hello').textContent`), /Welcome back/);
   } finally {
-    page.close();
+    p.close();
   }
 });
 

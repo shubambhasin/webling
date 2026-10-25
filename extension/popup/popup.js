@@ -42,6 +42,12 @@
           <input type="text" id="name" maxlength="16" placeholder="${esc(suggestion)}" aria-label="Name">
           <button id="dice" title="Pick a random name" aria-label="Random name">?!</button>
         </div>
+        <label class="pick">Vibe
+          <select id="vibe">
+            <option value="">let the egg decide</option>
+            ${WL.voice.VIBE_IDS.map((v) => `<option value="${v}">${esc(WL.voice.VIBES[v].label)}: ${esc(WL.voice.VIBES[v].blurb)}</option>`).join('')}
+          </select>
+        </label>
         <label class="check" ${WL.config.presenceUrl ? '' : 'hidden'}>
           <input type="checkbox" id="presence" checked>
           <span>Meet other weblings on the same page
@@ -56,7 +62,7 @@
     $('#hatch').onclick = async () => {
       $('#hatch').disabled = true;
       await stage.crack();
-      state = await send({ type: 'hatch', name: name.value || suggestion, presence: $('#presence').checked });
+      state = await send({ type: 'hatch', name: name.value || suggestion, presence: $('#presence').checked, vibe: $('#vibe').value });
       render();
       stage.celebrate();
       const vibe = WL.voice.VIBES[WL.voice.vibeOf(state.pet)];

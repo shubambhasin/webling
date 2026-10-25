@@ -15,7 +15,7 @@ function boot() {
     runtime: { onMessage: { addListener: (f) => listeners.push(f) }, onInstalled: { addListener: (f) => installs.push(f) } },
     tabs: { create: (t) => opened.push(t.url) },
   };
-  loadShared(['shared/pet.js', 'background.js'], { chrome, structuredClone });
+  loadShared(['shared/pet.js', 'shared/voice.js', 'background.js'], { chrome, structuredClone });
   const send = (msg) => new Promise((res) => listeners[0](msg, {}, res));
   return { send, store, opened, install: () => installs[0]({ reason: 'install' }) };
 }
@@ -117,4 +117,20 @@ test('aura the page reports: only known reasons, at most once per 8s each', asyn
   assert.equal((await bg.send({ type: 'aura', reason: 'popup' })).delta, 0, 'meals only count through "ate"');
   assert.equal((await bg.send({ type: 'aura', reason: 'free_aura_pls' })).delta, 0);
   assert.equal(bg.store.pet.aura, 1);
+});
+
+test('a vibe can be picked at hatching or changed later; anything else lets the egg decide', async () => {
+  const bg = boot();
+  await bg.install();
+  let s = await bg.send({ type: 'hatch', name: 'Mochi', vibe: 'not-a-vibe' });
+  assert.equal(s.pet.vibe, undefined, 'unknown vibes are ignored');
+  s = await bg.send({ type: 'setVibe', vibe: 'dramatic' });
+  assert.equal(s.pet.vibe, 'dramatic');
+  s = await bg.send({ type: 'setVibe', vibe: '<script>' });
+  assert.equal(s.pet.vibe, 'dramatic');
+
+  const bg2 = boot();
+  await bg2.install();
+  s = await bg2.send({ type: 'hatch', name: 'Bean', vibe: 'wholesome' });
+  assert.equal(s.pet.vibe, 'wholesome');
 });

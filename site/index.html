@@ -3,128 +3,155 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Webling: a tiny pet that lives on the internet</title>
-  <meta name="description" content="Hatch a pixel pet that follows you to every site. It climbs your pages, eats cookie banners and pop-ups, and meets other people's weblings.">
-  <meta property="og:title" content="Webling: a tiny pet that lives on the internet">
-  <meta property="og:description" content="It climbs your pages, eats cookie banners and pop-ups, and meets other people's weblings.">
+  <title>Webling: the internet is a mess, your webling eats it</title>
+  <meta name="description" content="A tiny pixel pet with opinions that lives on every site you visit. It eats cookie banners and pop-ups, roasts your LinkedIn, and tells you to go to bed at 3am.">
+  <meta property="og:title" content="Webling: the internet is a mess. Your webling eats it.">
+  <meta property="og:description" content="A tiny pixel pet with opinions. Eats pop-ups, roasts your tabs, farms aura.">
   <meta property="og:image" content="/og.png">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0d0a17">
   <link rel="icon" href="/ext/icons/32.png">
   <link rel="stylesheet" href="/site.css">
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
   <header class="top">
-    <a class="brand" href="/"><img src="/ext/icons/32.png" alt="" width="20" height="20">webling</a>
-    <nav>
-      <a href="#how">How it works</a>
-      <a href="#privacy">Privacy</a>
-      <a class="btn small" href="#install">Get it</a>
+    <a class="brand" href="/" aria-label="Webling home"><canvas class="wordmark" data-text="WEBLING" data-cell="3" aria-hidden="true"></canvas></a>
+    <nav aria-label="Sections">
+      <a href="#takes">Takes</a>
+      <a href="#vibe-check">Vibe check</a>
+      <a href="#aura">Aura</a>
+      <a class="btn small" href="#get">Get it</a>
     </nav>
   </header>
 
-  <main>
+  <div class="hell-status" id="hell-status" hidden aria-live="polite">
+    <span><i></i> pop-up hell: <b id="hell-left">0</b> left</span>
+    <button id="nuke" type="button">nuke them (boring)</button>
+  </div>
+
+  <main id="main">
     <section class="hero">
-      <p class="eyebrow">a browser pet · free · open source</p>
-      <h1>A tiny pet that lives on the internet.</h1>
-      <p class="lede">Hatch a webling and it comes with you to every site. It climbs your headlines, eats cookie
-        banners and pop-ups, roasts your LinkedIn, clocks your doomscrolling, and farms aura while it's at it.</p>
+      <p class="eyebrow">a browser pet with opinions</p>
+      <h1><span>The internet is a mess.</span> <span class="hot">Your webling eats it.</span></h1>
+      <p class="lede">A tiny pixel gremlin that lives on every site you visit. It eats cookie banners and pop-ups,
+        roasts your LinkedIn, clocks your doomscrolling and tells you to go to bed at 3am.</p>
       <div class="cta">
-        <a class="btn primary" href="#install">Add it to Chrome</a>
-        <span class="hint" id="hello">Yours just hatched. It's on this page. Look around.</span>
+        <a class="btn primary" href="#get">Add to Chrome, it's free</a>
+        <a class="btn ghost" href="#vibe-check">Take the vibe check</a>
       </div>
-      <canvas id="lineup" aria-label="A row of weblings in different colours and stages"></canvas>
-      <p class="caption">Every webling is one of a kind. Colours come from the egg, the crown comes from eating a lot.</p>
-    </section>
-
-    <section class="demo" id="demo">
-      <h2>Watch it eat.</h2>
-      <p>A cookie banner just slid in at the bottom of your screen. Give your webling a second. Then summon a pop-up
-        and see what happens to that.</p>
-      <div class="score">
-        <div><b id="n-cookies">0</b><span>cookie banners eaten</span></div>
-        <div><b id="n-popups">0</b><span>pop-ups eaten</span></div>
-        <div><b id="n-aura">0</b><span id="n-tier">aura · NPC</span></div>
+      <div class="pet-card" id="pet-card" aria-live="polite">
+        <canvas id="pet-face" width="56" height="48" aria-hidden="true"></canvas>
+        <div>
+          <p class="pet-name"><b id="pet-name">…</b> <span class="tag" id="pet-vibe">hatching</span></p>
+          <p class="pet-stats"><span id="pet-aura">0</span> aura · <span id="pet-tier">NPC</span> · <span id="pet-eaten">0</span> snacks eaten</p>
+        </div>
       </div>
-      <p class="actions">
-        <button class="btn" id="summon">Summon a pop-up</button>
-        <button class="btn ghost" id="rebanner">Another cookie banner</button>
-        <span id="countdown" aria-live="polite"></span>
-      </p>
-      <p class="small">Poke it (then keep poking, see what happens). Grab it and yeet it. Leave the page alone and it
-        falls asleep.</p>
+      <p class="hint" id="hello">That's your webling. It's loose on this page. Poke it. Yeet it.</p>
+      <button class="btn ghost small" id="more-chaos" type="button">Summon more chaos</button>
     </section>
 
-    <section class="vibes" id="vibes">
-      <h2>Five vibes. Zero filter.</h2>
-      <p>Every egg hatches with a vibe. It decides how your webling talks, moves and judges you.</p>
-      <div class="vibe-grid" id="vibe-grid"></div>
-    </section>
-
-    <section class="how" id="how">
-      <h2>What it does all day</h2>
-      <div class="cards">
-        <article>
-          <h3>Lives on the page</h3>
-          <p>It reads the page for itself: every line of text is a ledge to walk on. It hops between paragraphs and
-            drops back in from the top when you scroll.</p>
+    <section class="uses" aria-labelledby="uses-title">
+      <h2 id="uses-title">What it's actually for</h2>
+      <div class="stickers">
+        <article class="sticker violet">
+          <h3>Eats the junk</h3>
+          <p>Cookie banners, newsletter traps, "turn on notifications", fake paywalls. Chewed off your screen, scroll
+            unlocked. It never clicks "accept".</p>
         </article>
-        <article>
-          <h3>Eats the annoying stuff</h3>
-          <p>Cookie banners, newsletter modals, "get the app" nags. It chews them away and unlocks the scroll they
-            froze. Hungry pets eat more. Every meal can be spat back out.</p>
+        <article class="sticker pink">
+          <h3>Screen time, but make it a friend</h3>
+          <p>Six screens of scrolling in fifteen seconds? It calls it. 3am on Reddit? Go to bed bestie. A nudge from
+            a pet hits different from a settings toggle.</p>
         </article>
-        <article>
-          <h3>Meets other weblings</h3>
-          <p>Reading something popular? Other people's weblings show up on the same page. Boop them and they boop you
-            back.</p>
+        <article class="sticker acid">
+          <h3>Has takes on everything</h3>
+          <p>It knows LinkedIn from Amazon from your 47-tab wiki hole, and it has something to say about each one.</p>
         </article>
-        <article>
-          <h3>Has opinions</h3>
-          <p>It knows when you're on LinkedIn, shopping at 2am, or 40 minutes deep in a wiki hole, and it will say
-            something about it.</p>
-        </article>
-        <article>
-          <h3>Farms aura</h3>
-          <p>Eating pop-ups and sticking landings earns aura. Getting yeeted costs it. NPC to final boss, and it sparkles
-            once it's main character.</p>
-        </article>
-        <article>
-          <h3>Grows up</h3>
-          <p>New sites, meals and boops earn xp. Babies become grown-ups, grown-ups become legends with crowns. Share
-            its card when it does.</p>
+        <article class="sticker cyan">
+          <h3>Grows, flexes, farms aura</h3>
+          <p>Every snack and stuck landing earns aura. NPC to final boss, with a card to prove it.</p>
         </article>
       </div>
     </section>
 
-    <section class="privacy" id="privacy">
-      <h2>Private by design</h2>
-      <ul>
-        <li><b>Your history stays on your computer.</b> The "sites explored" count is kept locally and never sent anywhere.</li>
-        <li><b>Meeting other weblings shares a scrambled page ID</b> (a SHA-256 of the page address), plus your pet's name and colour. Never the URL, the title or anything you type.</li>
-        <li><b>It stays out of private places.</b> No meeting other pets in incognito, on mail, docs, banking and sign-in pages, or on any page with a password box.</li>
-        <li><b>Eating is only cosmetic.</b> It hides elements on your screen. It never clicks "accept", blocks requests or reads forms.</li>
-      </ul>
+    <section class="takes" id="takes" aria-labelledby="takes-title">
+      <h2 id="takes-title">It has takes.</h2>
+      <p class="sub">Pick a place. Your webling will be normal about it (it won't).</p>
+      <div class="takes-grid">
+        <div class="stage-box">
+          <div class="speech" id="take-text" aria-live="polite">pick a site. i'm ready.</div>
+          <canvas id="take-stage" aria-label="Your webling, reacting"></canvas>
+        </div>
+        <div class="take-controls">
+          <div class="chips" id="take-chips" role="group" aria-label="Places"></div>
+          <form class="roast" id="roast">
+            <label for="roast-input">Roast any site</label>
+            <div class="row">
+              <input id="roast-input" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="linkedin.com">
+              <button class="btn small" type="submit">Roast</button>
+            </div>
+          </form>
+          <div class="vibe-switch">
+            <span>Hear it in another vibe:</span>
+            <div class="chips small" id="vibe-chips" role="group" aria-label="Vibes"></div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="install" id="install">
-      <h2>Get a webling</h2>
-      <p>It's on its way to the Chrome Web Store. Until then, you can install it by hand in about a minute:</p>
-      <ol>
-        <li><a class="btn primary" href="/webling-extension.zip" download>Download the extension</a> and unzip it.</li>
-        <li>Open <code>chrome://extensions</code> and switch on <b>Developer mode</b> (top right).</li>
-        <li>Click <b>Load unpacked</b> and pick the unzipped folder. Your egg is waiting.</li>
+    <section class="quiz" id="vibe-check" aria-labelledby="quiz-title">
+      <h2 id="quiz-title">Vibe check.</h2>
+      <p class="sub">Three questions. Your webling's whole personality depends on it. No pressure.</p>
+      <div class="quiz-box" id="quiz" aria-live="polite"></div>
+    </section>
+
+    <section class="aura" id="aura" aria-labelledby="aura-title">
+      <h2 id="aura-title">Aura is the whole game.</h2>
+      <p class="sub">Being iconic earns it. Being undignified costs it.</p>
+      <ol class="ladder" id="ladder"></ol>
+      <div class="ledger">
+        <p><b class="plus">+15</b> eat a pop-up</p>
+        <p><b class="plus">+10</b> eat a cookie banner</p>
+        <p><b class="plus">+5</b> get booped by another webling</p>
+        <p><b class="plus">+4</b> stick the landing</p>
+        <p><b class="minus">−3</b> get yeeted</p>
+        <p><b class="minus">−5</b> poke spam victim</p>
+        <p><b class="minus">−8</b> spit food out</p>
+      </div>
+    </section>
+
+    <section class="get" id="get" aria-labelledby="get-title">
+      <h2 id="get-title">Hatch yours.</h2>
+      <p class="sub">Chrome Web Store listing is on its way. Until then it takes about a minute by hand:</p>
+      <ol class="steps">
+        <li><a class="btn primary" href="/webling-extension.zip" download>Download the extension</a> <span>and unzip it.</span></li>
+        <li>Open <code>chrome://extensions</code> and switch on <b>Developer mode</b>.</li>
+        <li>Click <b>Load unpacked</b>, pick the folder. Name your egg. Choose a vibe (or let fate decide).</li>
       </ol>
-      <p class="small">Works in Chrome, Edge, Arc, Brave and other Chromium browsers.</p>
+      <p class="fine">Works in Chrome, Edge, Arc, Brave and friends. Open source on
+        <a href="https://github.com/shubambhasin/webling">GitHub</a>.</p>
+    </section>
+
+    <section class="privacy" aria-labelledby="privacy-title">
+      <h2 id="privacy-title">Nosy pet, private by design.</h2>
+      <ul>
+        <li>Your browsing never leaves your computer. "Sites explored" is counted locally.</li>
+        <li>Meeting other weblings shares a scrambled page ID, your pet's name and colour. Never the address.</li>
+        <li>No meeting other pets in incognito, on mail, banking or sign-in pages, or anywhere with a password box.</li>
+        <li>Eating is cosmetic: it hides things on your screen. It never clicks, blocks requests or reads forms.</li>
+      </ul>
     </section>
   </main>
 
   <footer>
-    <span>webling · made with very small pixels</span>
-    <span>This page sets no cookies. The cookie banner is a snack.</span>
+    <canvas class="wordmark big" data-text="WEBLING" data-cell="7" aria-hidden="true"></canvas>
+    <p>This page sets no cookies. Every cookie banner here is a snack.</p>
   </footer>
 
   <script src="/ext/chrome-shim.js"></script>
   <script src="/ext/shared/config.js"></script>
+  <script>WL.config.halo = true;</script>
   <script src="/ext/shared/sprite.js"></script>
   <script src="/ext/shared/pet.js"></script>
   <script src="/ext/shared/voice.js"></script>

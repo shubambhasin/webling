@@ -93,6 +93,20 @@ input[type=text] {
 .check { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 14px; cursor: pointer; }
 .check input { margin: 2px 0 0; accent-color: var(--accent); }
 .check[hidden] { display: none; }
+.pick { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+.pick select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  font: inherit;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--line);
+  padding: 6px 8px;
+}
 .hatch .primary { width: 100%; padding: 10px; font-size: 14px; }
 
 .said {
