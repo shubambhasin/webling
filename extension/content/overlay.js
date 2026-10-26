@@ -1,11 +1,14 @@
-// One fixed layer above the page: a canvas for pixels plus a small DOM layer for hit boxes,
-// speech bubbles and toasts. It lives in a closed shadow root so page styles can't reach it.
+// One fixed layer above the page: a small canvas per pet (moved with transforms, redrawn only when its
+// picture changes), a full-screen canvas for effects (drawn only while there are any), and a DOM layer for
+// hit boxes, speech bubbles and toasts. It lives in a closed shadow root so page styles can't reach it.
 (() => {
   const WL = (globalThis.WL ||= {});
 
   const CSS = `
     :host { all: initial; }
     canvas { position: fixed; left: 0; top: 0; pointer-events: none; image-rendering: pixelated; }
+    .pets { position: fixed; inset: 0; pointer-events: none; }
+    .pets canvas { position: absolute; will-change: transform; }
     .ui { position: fixed; inset: 0; pointer-events: none; font: 600 12px/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #1b1528; }
     .hit { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: grab; touch-action: none; }
     .hit.off { pointer-events: none; }
@@ -31,9 +34,10 @@
       host.style.cssText = 'all:initial;position:fixed;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none;';
       // Open only in the dev harness, so tests can reach inside.
       const root = host.attachShadow({ mode: globalThis.devInstall ? 'open' : 'closed' });
-      root.innerHTML = `<style>${CSS}</style><canvas></canvas><div class="ui"></div>`;
+      root.innerHTML = `<style>${CSS}</style><div class="pets"></div><canvas class="fx"></canvas><div class="ui"></div>`;
       ov.host = host;
-      ov.canvas = root.querySelector('canvas');
+      ov.pets = root.querySelector('.pets');
+      ov.canvas = root.querySelector('canvas.fx');
       ov.ctx = ov.canvas.getContext('2d');
       ov.ui = root.querySelector('.ui');
       document.documentElement.appendChild(host);

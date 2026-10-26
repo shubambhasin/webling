@@ -179,12 +179,37 @@ permission justifications, privacy-practices answers and a pre-submit checklist.
   `presenceUrl` in `extension/shared/config.js` to the `wss://` address. Until then presence is off, which is
   what the listing and policy say. Turning it on means updating both (the test will remind you).
 
+## Checking real sites
+
+Two scripts run the extension on the real web in headless Chrome (they need network access; neither is
+part of `npm test`):
+
+```bash
+node scripts/real-sites.mjs
+```
+
+loads about 50 sites (the big consent tools' own sites, news, shopping), runs the extension in an isolated
+world like a content script, and writes `real-sites-report/report.json` with the consent tools it saw, what
+it ate, and anything left, plus before/after screenshots where something was left. Pass URLs to check just
+those. Consent banners depend on where you are: many sites show them only to visitors from the EU, so run
+it from (or through) an EU connection to see more of them. Every miss it finds should become a fixture in
+`fx.cmp()` (`test/fixtures/eater.html`) and a test in `test/consent-tools.e2e.test.mjs`.
+
+```bash
+node scripts/perf.mjs
+```
+
+measures main-thread time per second on heavy pages with and without the extension, how long its scans
+take, and whether the pet still finds text to stand on far down a long page.
+
 ## Known gaps
 
 - Check that page CSPs never block the content script's WebSocket on strict sites. If one does, move
   the socket into the service worker and relay to tabs over a port.
 - Pop-up detection is heuristic, so expect false negatives on unusual sites before false positives. Add
-  cases to `classify()` in `eater.js` as you find them.
+  cases to `classify()` in `eater.js` as you find them, with a fixture (see "Checking real sites").
+- Consent tools that draw inside cross-origin frames are recognised by the frame's container and title,
+  not by what the frame says.
 - Platforms are text-line tops, not real glyph outlines; images and buttons aren't platforms yet.
 - The presence server is single-process with in-memory rooms. For scale, move rooms to Cloudflare
   Durable Objects (one object per room hash) or shard by room.

@@ -61,6 +61,85 @@
         return setInterval(() => el.classList.toggle('tick'), ms);
       },
       toast: () => document.querySelector('webling-root').shadowRoot.querySelector('.toast'),
+
+      // Banners built the way real consent tools build theirs. Returns the id of the element to check.
+      cmp(kind) {
+        const add = (html) => { document.body.insertAdjacentHTML('beforeend', html); return document.body.lastElementChild; };
+        if (kind === 'cookiebot') {
+          // tabs in a <nav>, and a hidden Details tab listing hundreds of vendors
+          const rows = Array.from({ length: 300 }, (_, i) => `<tr><td>vendor ${i}</td><td>ads</td><td>1 year</td></tr>`).join('');
+          add(`<div id="CybotCookiebotDialog" class="CybotCookiebotDialogActive" role="dialog" aria-modal="true"
+            style="position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:880px;max-width:95vw;background:#fff;z-index:2147483631;padding:16px;font:14px system-ui;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+            <nav style="display:flex;gap:16px"><a href="#">Consent</a><a href="#">Details</a><a href="#">About</a></nav>
+            <h2>This website uses cookies</h2>
+            <p>We use cookies to personalise content and ads, to provide social media features and to analyse our traffic.</p>
+            <table style="display:none">${rows}</table>
+            <div><button>Deny</button> <button>Customise</button> <button>Allow all</button></div></div>`);
+          return 'CybotCookiebotDialog';
+        }
+        if (kind === 'shadow') {
+          // all of the banner inside a shadow root, the host itself empty
+          const host = add('<div id="usercentrics-root" style="position:fixed;left:0;right:0;bottom:0;z-index:2147483640"></div>');
+          host.attachShadow({ mode: 'open' }).innerHTML = `<style>.box{background:#1f2937;color:#fff;padding:20px;font:15px system-ui}</style>
+            <div class="box"><p>We use cookies and similar technologies to improve your experience. You can change your privacy settings at any time.</p>
+            <button>Accept All</button> <button>Deny</button> <button>More information</button></div>`;
+          return 'usercentrics-root';
+        }
+        if (kind === 'frame') {
+          // a full-screen container whose only content is the consent tool's frame
+          add(`<div id="sp_message_container_1234" style="position:fixed;inset:0;z-index:2147483640;background:rgba(0,0,0,.45)">
+            <iframe id="sp_message_iframe_1234" title="SP Consent Message" style="display:block;width:600px;height:320px;margin:18vh auto 0;border:0;background:#fff"
+              srcdoc="<p>We and our partners use cookies.</p><button>Accept</button> <button>Manage</button>"></iframe></div>`);
+          return 'sp_message_container_1234';
+        }
+        if (kind === 'wrapped') {
+          // the whole site in one fixed full-screen element, with the banner fixed inside it
+          const filler = Array.from({ length: 900 }, (_, i) => `<span>item ${i} </span>`).join('');
+          add(`<div id="app-shell" style="position:fixed;inset:0;overflow:auto;background:#fafafa;z-index:30">
+            <div style="padding:80px 40px;font:18px Georgia">${filler}</div>
+            <div id="inner-banner" style="position:fixed;left:0;right:0;bottom:0;background:#2e3a4d;color:#fff;padding:18px;z-index:31">
+              <p>We use cookies to improve your experience. Read our cookie policy.</p><button>Accept all</button> <button>Reject</button></div></div>`);
+          return 'inner-banner';
+        }
+        if (kind === 'italian') {
+          // a cookie wall in Italian, named only by a generic privacy class
+          add(`<div class="privacy-cp-wall" style="position:fixed;inset:0;z-index:2147483640;background:rgba(255,255,255,.96);padding:12vh 20vw;font:16px Georgia">
+            <h2>Il rispetto della tua privacy è la nostra priorità</h2>
+            <p>Utilizziamo i cookie e altre tecnologie per migliorare la tua esperienza e mostrarti pubblicità in linea con le tue preferenze.</p>
+            <button>Accetta e continua</button> <button>Rifiuta e abbonati</button></div>`);
+          document.body.lastElementChild.id = 'italian-wall';
+          return 'italian-wall';
+        }
+        if (kind === 'scrambled') {
+          // generated class names, and "we may place cookies" rather than "we use cookies"
+          add(`<div class="cf1e63 cf0e2J" id="scrambled" style="position:fixed;left:24px;bottom:24px;width:420px;background:#fff;padding:18px;z-index:2147483640;font:14px system-ui;box-shadow:0 6px 30px rgba(0,0,0,.25)">
+            <p><b>Consent to Cookies</b></p><p>We may place these cookies for analysis of our visitor data, to improve our website and show personalised content.</p>
+            <button>Accept all</button> <button>Reject all</button> <button>Settings</button></div>`);
+          return 'scrambled';
+        }
+        if (kind === 'collapsed') {
+          // a zero-size fixed wrapper with the visible banner fixed inside it
+          add(`<div id="consent_blackbar" style="position:fixed;bottom:0;left:0;width:0;height:0;z-index:2147483640">
+            <div id="truste-consent-track" style="position:fixed;left:0;right:0;bottom:0;background:#222;color:#fff;padding:18px;font:14px system-ui">
+              <p>This site uses cookies and related technologies for site operation, analytics, and third party advertising purposes.</p>
+              <button>Agree and proceed</button> <button>Required only</button></div></div>`);
+          return 'truste-consent-track';
+        }
+        if (kind === 'chat') {
+          // a chat launcher that wants cookies before it opens: not a banner
+          add(`<div id="chat-launcher" class="intercom-consent-launcher" style="position:fixed;right:20px;bottom:20px;width:220px;height:90px;background:#2a5bd7;color:#fff;padding:10px;border-radius:12px;z-index:2147483640;font:13px system-ui">
+            Hi there! Have a question? Please accept cookies to chat with us <button>Accept</button></div>`);
+          return 'chat-launcher';
+        }
+        if (kind === 'header') {
+          // a fixed site header whose menu is all about cookie consent (the site sells consent tools)
+          add(`<header id="site-header" style="position:fixed;top:0;left:0;right:0;height:64px;background:#fff;z-index:60;display:flex;gap:18px;align-items:center;padding:0 20px;font:14px system-ui">
+            <b>ConsentCo</b><a href="#">Cookie Consent Manager</a><a href="#">Cookie Policy Generator</a><a href="#">Privacy Policy</a>
+            <a href="#">We help sites use cookies the right way</a><button>Accept the challenge</button><button>Sign in</button></header>`);
+          return 'site-header';
+        }
+        throw new Error(kind);
+      },
     };
   </script>
   <script src="/dev/chrome-shim.js"></script>

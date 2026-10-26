@@ -24,6 +24,10 @@
       this.mood = 'full';
       this.onPoke = null;
       this.hit = WL.overlay.el('div', 'hit');
+      this.sprite = WL.overlay.el('canvas', '', WL.overlay.pets);
+      if (ghost) this.sprite.style.opacity = '0.88';
+      else this.sprite.style.zIndex = '1'; // yours on top
+      this.spriteKey = this.placed = '';
       this.bubble = WL.overlay.el('div', ghost ? 'bubble ghost' : 'bubble');
       this.bindPointer();
       this.spawn();
@@ -267,20 +271,40 @@
       this.clipT += dt;
     }
 
-    draw(ctx, dpr) {
+    // Puts the pet on screen: repaints its own small canvas only when the picture changes (a new frame,
+    // facing the other way), and otherwise just moves it, which costs next to nothing.
+    draw(dpr) {
       const c = WL.art.CLIPS[this.clip] || WL.art.CLIPS.idle;
       const frame = Math.floor(this.clipT * c.fps) % c.frames.length;
-      let img = WL.art.bake(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0), pad = 0;
-      if (WL.config.halo) ({ img, pad } = WL.art.bakeHalo(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0));
+      const key = `${this.look.stage}|${this.look.seed}|${this.clip}|${frame}|${this.dir < 0}|${dpr}|${WL.config.halo}`;
+      if (key !== this.spriteKey) {
+        this.spriteKey = key;
+        let img = WL.art.bake(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0), pad = 0;
+        if (WL.config.halo) ({ img, pad } = WL.art.bakeHalo(this.look.stage, this.clip, frame, this.look.seed, PX * dpr, this.dir < 0));
+        const s = this.sprite;
+        if (s.width !== img.width || s.height !== img.height) {
+          s.width = img.width;
+          s.height = img.height;
+          s.style.width = `${img.width / dpr}px`;
+          s.style.height = `${img.height / dpr}px`;
+        }
+        const g = s.getContext('2d');
+        g.clearRect(0, 0, s.width, s.height);
+        g.drawImage(img, 0, 0);
+        this.pad = pad / dpr;
+      }
       const bob = this.clip === 'idle' && Math.floor(this.clipT * 2) % 2 ? PX
         : this.clip === 'dance' && frame === 1 ? -PX * 2 : 0;
       const left = this.sx - this.w / 2, top = this.sy - this.h;
-      ctx.globalAlpha = this.ghost ? 0.88 : 1;
-      ctx.drawImage(img, Math.round(left * dpr) - pad, Math.round((top + bob) * dpr) - pad);
-      ctx.globalAlpha = 1;
-      this.hit.style.width = this.w + 'px';
-      this.hit.style.height = this.h + 'px';
-      this.hit.style.transform = `translate(${left}px, ${top}px)`;
+      const at = `${Math.round(left * dpr) / dpr - this.pad},${Math.round((top + bob) * dpr) / dpr - this.pad}`;
+      if (at !== this.placed) {
+        this.placed = at;
+        const [x, y] = at.split(',');
+        this.sprite.style.transform = `translate(${x}px, ${y}px)`;
+        this.hit.style.width = this.w + 'px';
+        this.hit.style.height = this.h + 'px';
+        this.hit.style.transform = `translate(${left}px, ${top}px)`;
+      }
       if (this.bubble.classList.contains('on')) {
         const half = this.bubble.offsetWidth / 2 + 4;
         const bx = Math.max(half, Math.min(innerWidth - half, this.sx));
@@ -365,6 +389,7 @@
 
     destroy() {
       this.hit.remove();
+      this.sprite.remove();
       this.bubble.remove();
       clearTimeout(this.sayTimer);
     }

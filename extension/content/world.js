@@ -8,10 +8,15 @@
   const world = (WL.world = {
     platforms: [],
 
+    // Rescans when something changed: the page's content (checked every 1.5s), a scroll, a resize.
     start() {
       world.scan();
-      setInterval(world.scan, 1500);
-      let t;
+      let dirty = false, t;
+      new MutationObserver(() => (dirty = true)).observe(document.body, { childList: true, subtree: true, characterData: true });
+      setInterval(() => {
+        if (dirty) world.scan();
+        dirty = false;
+      }, 1500);
       addEventListener('scroll', () => {
         clearTimeout(t);
         t = setTimeout(world.scan, 150);
@@ -26,14 +31,23 @@
       const top = scrollY - innerHeight * 0.5, bottom = scrollY + innerHeight * 1.5;
       const fixedCache = new Map();
       const rects = [];
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-        acceptNode: (n) => (n.nodeValue.trim().length > 1 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+      // Skip whole parts of the page far from the screen (a long article is mostly off it), and things
+      // that can't be stood on, without looking at every text node inside them.
+      const vTop = top - scrollY, vBottom = bottom - scrollY;
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+        acceptNode(n) {
+          if (n.nodeType === Node.TEXT_NODE) return n.nodeValue.trim().length > 1 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+          if (n.matches(SKIP)) return NodeFilter.FILTER_REJECT;
+          const r = n.getBoundingClientRect();
+          if (r.height > 0 && (r.bottom < vTop || r.top > vBottom)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_SKIP;
+        },
       });
       const range = document.createRange();
       let n, seen = 0;
       while ((n = walker.nextNode()) && seen++ < MAX_NODES) {
         const el = n.parentElement;
-        if (!el || el.closest(SKIP) || inFixed(el, fixedCache)) continue;
+        if (!el || inFixed(el, fixedCache)) continue;
         range.selectNodeContents(n);
         for (const r of range.getClientRects()) {
           const y = r.top + scrollY;

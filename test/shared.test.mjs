@@ -53,3 +53,8 @@ test('hunger drains over time and feeding caps at 100', () => {
 test('names are trimmed and stripped of markup characters', () => {
   assert.equal(M.cleanName('  <b>Mochi</b> the great and powerful '), 'bMochi/b the gre');
 });
+
+test('any frame number gives a frame (a bad clock once froze the pet)', () => {
+  const good = WL.art.rows('adult', 'walk', 0);
+  for (const i of [-1, -7, 2, 3.9, NaN]) assert.equal(WL.art.rows('adult', 'walk', i).length, good.length, String(i));
+});

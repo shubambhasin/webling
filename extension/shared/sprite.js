@@ -65,7 +65,8 @@
     if (stage === 'egg') return clip === 'crack' ? EGG.crack : EGG.whole;
     const body = BODY[stage] || BODY.baby;
     const c = CLIPS[clip] || CLIPS.idle;
-    const [eyes, mouth, feet] = c.frames[i % c.frames.length];
+    const n = c.frames.length;
+    const [eyes, mouth, feet] = c.frames[((Math.trunc(i) % n) + n) % n || 0]; // any frame number, even a bad one
     return [...body.top, ...body.eyes[eyes], ...body.mouth[mouth], ...body.belly, body.feet[feet]];
   }
 

@@ -133,22 +133,38 @@
   // Main-character aura and up is visible: a sparkle now and then.
   const AURA_GLOW = WL.model.AURA_TIERS.find((t) => t.label === 'main character').min;
 
-  let last = performance.now();
-  function loop(now) {
-    const dt = Math.min(0.05, (now - last) / 1000);
-    last = now;
-    const { ctx, canvas, dpr } = WL.overlay;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if ((WL.state.pet.aura || 0) >= AURA_GLOW && Math.random() < dt * 0.7) {
-      WL.fx.emote('sparkle', WL.me.sx + (Math.random() - 0.5) * WL.me.w * 1.4, WL.me.sy - Math.random() * WL.me.h);
+  // Each frame: move the pets, and draw effects only while there are any (a full-screen canvas that's
+  // repainted every frame costs real CPU, even when it's empty). How often it runs depends on what's
+  // happening: every display frame for fast motion (falling, thrown, leaping to eat) and effects, 30 a
+  // second for walking, 8 a second for sitting, sleeping or posing.
+  const STILL = new Set(['idle', 'sleep', 'pose']), CALM = new Set(['idle', 'sleep', 'pose', 'walk']);
+  let last = performance.now(), fxShown = false;
+  function loop(now = performance.now()) {
+    const still = !WL.fx.parts.length && [...WL.pets].every((p) => STILL.has(p.mode));
+    const calm = !WL.fx.parts.length && [...WL.pets].every((p) => CALM.has(p.mode));
+    // Never negative: a display frame's timestamp can be a little older than the last timer tick.
+    const dt = Math.max(0, Math.min(still ? 0.2 : calm ? 0.08 : 0.05, (now - last) / 1000));
+    last = Math.max(last, now);
+    try {
+      const { ctx, canvas, dpr } = WL.overlay;
+      if (WL.shown && (WL.state.pet.aura || 0) >= AURA_GLOW && Math.random() < dt * 0.7) {
+        WL.fx.emote('sparkle', WL.me.sx + (Math.random() - 0.5) * WL.me.w * 1.4, WL.me.sy - Math.random() * WL.me.h);
+      }
+      for (const p of WL.pets) {
+        p.update(dt);
+        p.draw(dpr);
+      }
+      WL.fx.update(dt);
+      if (WL.fx.parts.length || fxShown) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        WL.fx.draw(ctx, dpr);
+        fxShown = WL.fx.parts.length > 0;
+      }
+    } finally {
+      // whatever went wrong this frame, the pet keeps living
+      if (still && !fxShown) setTimeout(loop, 125);
+      else if (calm && !fxShown) setTimeout(loop, 33);
+      else requestAnimationFrame(loop);
     }
-    for (const p of WL.pets) {
-      p.update(dt);
-      if (p !== WL.me) p.draw(ctx, dpr);
-    }
-    WL.me.draw(ctx, dpr); // yours on top
-    WL.fx.update(dt);
-    WL.fx.draw(ctx, dpr);
-    requestAnimationFrame(loop);
   }
 })();
